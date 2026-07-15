@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { signOutAction } from "@/app/auth/actions";
 import { NavigationProgress } from "@/components/navigation-progress";
+import { NotificationBell } from "@/components/notification-bell";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <>
                 <Link href="/app">Dashboard</Link>
                 {isAdmin && <Link href="/admin/dashboard">Admin</Link>}
+                <NotificationBell userId={user.id} />
                 <form action={signOutAction} style={{ display: "inline" }}>
                   <button type="submit" className="btn-primary-sm" style={{ background: "none", border: "1px solid var(--border)", color: "var(--muted-foreground)", cursor: "pointer" }}>Sign out</button>
                 </form>

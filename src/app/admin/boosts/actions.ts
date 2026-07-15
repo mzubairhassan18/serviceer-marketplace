@@ -12,7 +12,7 @@ export async function approveBoostAction(formData: FormData) {
 
   const { data: boost } = await supabase
     .from("gig_boosts")
-    .select("id, status, subscription_id, gig_id, provider_subscriptions(end_date)")
+    .select("id, status, subscription_id, gig_id, provider_id, gigs(title), provider_subscriptions(end_date)")
     .eq("id", boostId)
     .single();
 
@@ -25,6 +25,17 @@ export async function approveBoostAction(formData: FormData) {
   await supabase.from("gig_boosts").update({ status: "approved" }).eq("id", boostId);
   await supabase.from("gigs").update({ featured_until: endDate }).eq("id", boost.gig_id);
 
+  const gigTitle = (boost as any).gigs?.title ?? "your gig";
+  await supabase.from("notifications").insert({
+    user_id: boost.provider_id,
+    title: "Your gig boost has been approved",
+    body: gigTitle,
+    type: "boost_approved",
+    entity_type: "gig",
+    entity_id: boost.gig_id,
+    href: `/app/gigs`,
+  });
+
   revalidatePath("/admin/boosts");
 }
 
@@ -36,7 +47,7 @@ export async function rejectBoostAction(formData: FormData) {
 
   const { data: boost } = await supabase
     .from("gig_boosts")
-    .select("id, status")
+    .select("id, status, provider_id, gig_id, gigs(title)")
     .eq("id", boostId)
     .single();
 
@@ -44,5 +55,17 @@ export async function rejectBoostAction(formData: FormData) {
   if (boost.status !== "pending") throw new Error("Boost is not pending");
 
   await supabase.from("gig_boosts").update({ status: "rejected" }).eq("id", boostId);
+
+  const gigTitle = (boost as any).gigs?.title ?? "your gig";
+  await supabase.from("notifications").insert({
+    user_id: boost.provider_id,
+    title: "Your gig boost has been rejected",
+    body: gigTitle,
+    type: "boost_rejected",
+    entity_type: "gig",
+    entity_id: boost.gig_id,
+    href: `/app/gigs`,
+  });
+
   revalidatePath("/admin/boosts");
 }

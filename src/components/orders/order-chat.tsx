@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/utils/supabase/client";
 import type { Message } from "@/lib/types";
+import { sendMessageAction } from "@/app/app/messages/actions";
 
 export function OrderChat({ orderId, userId, initialMessages }: { orderId: string; userId: string; initialMessages: Message[] }) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -12,16 +12,14 @@ export function OrderChat({ orderId, userId, initialMessages }: { orderId: strin
   async function sendMessage() {
     if (!body.trim() || sending) return;
     setSending(true);
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({ order_id: orderId, sender_id: userId, body: body.trim() })
-      .select()
-      .single();
-
-    if (!error && data) {
-      setMessages((prev) => [...prev, data as unknown as Message]);
-      setBody("");
+    try {
+      const msg = await sendMessageAction(orderId, body.trim());
+      if (msg) {
+        setMessages((prev) => [...prev, msg as unknown as Message]);
+        setBody("");
+      }
+    } catch {
+      // silently fail
     }
     setSending(false);
   }

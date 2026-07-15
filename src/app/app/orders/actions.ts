@@ -4,6 +4,17 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 
+const statusLabels: Record<string, string> = {
+  offered: "sent you an offer",
+  accepted: "accepted your order",
+  in_progress: "started working on your order",
+  delivered: "marked the order as delivered",
+  payment_received: "confirmed payment received",
+  completed: "completed the order",
+  cancelled: "cancelled the order",
+  disputed: "raised a dispute",
+};
+
 export async function updateOrderStatusAction(formData: FormData) {
   const supabase = createClient(await cookies());
   const { data: { user } } = await supabase.auth.getUser();
@@ -14,7 +25,7 @@ export async function updateOrderStatusAction(formData: FormData) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("status, buyer_id, provider_id")
+    .select("status, buyer_id, provider_id, gig_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
@@ -47,6 +58,21 @@ export async function updateOrderStatusAction(formData: FormData) {
   const { error } = await supabase.from("orders").update(update).eq("id", orderId);
   if (error) throw new Error(error.message);
 
+  const recipientId = isBuyer ? order.provider_id : order.buyer_id;
+  const gigTitle = (order as any).gigs?.title ?? "your order";
+  const label = statusLabels[newStatus] || `updated order to "${newStatus}"`;
+  const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+
+  await supabase.from("notifications").insert({
+    user_id: recipientId,
+    title: `${actor?.name ?? "Someone"} ${label}`,
+    body: `Order: ${gigTitle}`,
+    type: "order_status",
+    entity_type: "order",
+    entity_id: orderId,
+    href: `/app/orders/${orderId}`,
+  });
+
   revalidatePath("/app/orders");
   revalidatePath(`/app/orders/${orderId}`);
 }
@@ -61,6 +87,12 @@ export async function raiseDisputeAction(formData: FormData) {
 
   if (!reason?.trim()) throw new Error("Dispute reason is required");
 
+  const { data: order } = await supabase
+    .from("orders")
+    .select("buyer_id, provider_id, gig_id, gigs(title)")
+    .eq("id", orderId)
+    .single();
+
   const { error } = await supabase
     .from("orders")
     .update({
@@ -72,6 +104,22 @@ export async function raiseDisputeAction(formData: FormData) {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+
+  if (order) {
+    const recipientId = order.buyer_id === user.id ? order.provider_id : order.buyer_id;
+    const gigTitle = (order as any).gigs?.title ?? "your order";
+    const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+
+    await supabase.from("notifications").insert({
+      user_id: recipientId,
+      title: `${actor?.name ?? "Someone"} raised a dispute`,
+      body: `Order: ${gigTitle} — ${reason.trim().slice(0, 100)}`,
+      type: "dispute",
+      entity_type: "order",
+      entity_id: orderId,
+      href: `/app/orders/${orderId}`,
+    });
+  }
 
   revalidatePath("/app/orders");
   revalidatePath(`/app/orders/${orderId}`);
@@ -89,7 +137,7 @@ export async function sendOfferAction(formData: FormData) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("provider_id, status")
+    .select("buyer_id, provider_id, status, gig_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
@@ -105,6 +153,19 @@ export async function sendOfferAction(formData: FormData) {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+
+  const gigTitle = (order as any).gigs?.title ?? "your inquiry";
+  const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+
+  await supabase.from("notifications").insert({
+    user_id: order.buyer_id,
+    title: `${actor?.name ?? "Someone"} sent you an offer`,
+    body: `Order: ${gigTitle} — Rs. ${price.toLocaleString()}`,
+    type: "offer",
+    entity_type: "order",
+    entity_id: orderId,
+    href: `/app/orders/${orderId}`,
+  });
 
   revalidatePath("/app/orders");
   revalidatePath(`/app/orders/${orderId}`);
