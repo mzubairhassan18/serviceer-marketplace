@@ -110,7 +110,7 @@ export function NotificationBell({ userId }: { userId: string }) {
           padding: "0.4rem",
           display: "flex",
           alignItems: "center",
-          color: "var(--foreground)",
+          color: "var(--muted-foreground)",
         }}
       >
         <Bell size={20} />
@@ -145,11 +145,11 @@ export function NotificationBell({ userId }: { userId: string }) {
             top: "100%",
             right: 0,
             marginTop: "0.5rem",
-            width: "360px",
+            width: "380px",
             maxHeight: "480px",
             overflowY: "auto",
-            background: "var(--background)",
-            border: "1px solid var(--border)",
+            background: "var(--card)",
+            border: "1px solid var(--card-border)",
             borderRadius: "var(--radius)",
             boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
             zIndex: 100,
@@ -165,21 +165,23 @@ export function NotificationBell({ userId }: { userId: string }) {
             }}
           >
             <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllRead}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--muted-foreground)",
-                  fontSize: "0.8rem",
-                  cursor: "pointer",
-                }}
-              >
-                Mark all read
-              </button>
-            )}
+            <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--accent)",
+                    fontSize: "0.8rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
           </div>
 
           {notifications.length === 0 ? (
@@ -187,38 +189,59 @@ export function NotificationBell({ userId }: { userId: string }) {
               No notifications yet.
             </div>
           ) : (
-            notifications.map((n) => (
+            <>
+              {notifications.slice(0, 8).map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => handleClick(n)}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "0.75rem 1rem",
+                    borderBottom: "1px solid var(--border)",
+                    background: n.read_at ? "var(--card)" : "var(--muted)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: n.read_at ? 400 : 600, fontSize: "0.875rem", marginBottom: "0.15rem" }}>
+                        {n.title}
+                      </div>
+                      {n.body && (
+                        <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {n.body}
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
+                      {timeAgo(n.created_at)}
+                    </div>
+                  </div>
+                </button>
+              ))}
               <button
-                key={n.id}
                 type="button"
-                onClick={() => handleClick(n)}
+                onClick={() => { setOpen(false); router.push("/app/notifications"); }}
                 style={{
                   display: "block",
                   width: "100%",
-                  textAlign: "left",
+                  textAlign: "center",
                   padding: "0.75rem 1rem",
-                  borderBottom: "1px solid var(--border)",
-                  background: n.read_at ? "var(--background)" : "var(--muted)",
+                  background: "var(--card)",
+                  color: "var(--accent)",
+                  border: "none",
                   cursor: "pointer",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                  borderTop: "1px solid var(--border)",
                 }}
               >
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: n.read_at ? 400 : 600, fontSize: "0.875rem", marginBottom: "0.15rem" }}>
-                      {n.title}
-                    </div>
-                    {n.body && (
-                      <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {n.body}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
-                    {timeAgo(n.created_at)}
-                  </div>
-                </div>
+                View all notifications
               </button>
-            ))
+            </>
           )}
         </div>
       )}

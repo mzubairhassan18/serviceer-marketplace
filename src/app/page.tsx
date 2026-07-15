@@ -11,7 +11,7 @@ export default async function HomePage() {
     .eq("status", "approved")
     .order("featured_until", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
-    .limit(24);
+    .limit(50);
 
   // Fetch review stats
   let gigStats: Record<string, { avg: number; count: number }> = {};
@@ -43,8 +43,5 @@ export default async function HomePage() {
     review_count: gigStats[g.id]?.count ?? 0,
   }));
 
-  const featuredGigs = enrichedGigs.filter((g: any) => g.featured_until && new Date(g.featured_until) > new Date());
-  const otherGigs = enrichedGigs.filter((g: any) => !g.featured_until || new Date(g.featured_until) <= new Date());
-
-  return <HomePageClient featuredGigs={featuredGigs} otherGigs={otherGigs} />;
+  return <HomePageClient allGigs={enrichedGigs} />;
 }

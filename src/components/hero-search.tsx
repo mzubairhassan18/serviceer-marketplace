@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState, useMemo } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Search, ChevronDown } from "lucide-react";
 
 const categories = [
@@ -16,16 +17,21 @@ const categories = [
 
 export function HeroSearch() {
   const router = useRouter();
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("");
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") || "");
+  const [category, setCategory] = useState(searchParams.get("category") || "");
   const [open, setOpen] = useState(false);
 
-  function handleSearch() {
+  function applyFilters(q: string, cat: string) {
     const params = new URLSearchParams();
-    if (query.trim()) params.set("q", query.trim());
-    if (category) params.set("category", category.toLowerCase());
+    if (q.trim()) params.set("q", q.trim());
+    if (cat) params.set("category", cat.toLowerCase());
     const qs = params.toString();
-    router.push(`/search${qs ? `?${qs}` : ""}`);
+    router.push(`/${qs ? `?${qs}` : ""}`, { scroll: false });
+  }
+
+  function handleSearch() {
+    applyFilters(query, category);
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -35,6 +41,7 @@ export function HeroSearch() {
   function selectCategory(cat: string) {
     setCategory(cat);
     setOpen(false);
+    applyFilters(query, cat);
   }
 
   return (
@@ -144,17 +151,14 @@ export function HeroSearch() {
           <Search size={18} /> Search
         </button>
       </div>
-      <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
         {categories.slice(0, 5).map((cat) => (
           <button
             key={cat}
             type="button"
-            onClick={() => {
-              const params = new URLSearchParams({ category: cat.toLowerCase() });
-              router.push(`/search?${params.toString()}`);
-            }}
+            onClick={() => selectCategory(cat)}
             style={{
-              background: "rgba(255,255,255,0.1)",
+              background: category === cat.toLowerCase() ? "rgba(255,255,255,0.25)" : "rgba(255,255,255,0.1)",
               border: "1px solid rgba(255,255,255,0.15)",
               color: "rgba(255,255,255,0.85)",
               fontSize: "0.8rem",
