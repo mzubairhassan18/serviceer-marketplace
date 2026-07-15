@@ -2,9 +2,6 @@
 
 import { useEffect } from "react";
 
-const START = "svc:navigation-start";
-const FINISH = "svc:navigation-finish";
-
 function getWrap() {
   return document.getElementById("np-wrap");
 }
@@ -13,38 +10,9 @@ function getBar() {
   return document.getElementById("np-bar");
 }
 
-export function startNavigationProgress() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(START));
-  }
-}
-
-export function finishNavigationProgress() {
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event(FINISH));
-  }
-}
-
-function installHistoryPatch(handler: () => void) {
-  const origPush = history.pushState;
-  const origReplace = history.replaceState;
-  history.pushState = function (...args) {
-    handler();
-    return origPush.apply(this, args);
-  };
-  history.replaceState = function (...args) {
-    handler();
-    return origReplace.apply(this, args);
-  };
-  return () => {
-    history.pushState = origPush;
-    history.replaceState = origReplace;
-  };
-}
-
 function start() {
-  const wrap = getWrap();
   const bar = getBar();
+  const wrap = getWrap();
   if (bar) bar.style.transform = "";
   if (wrap) wrap.classList.add("visible");
 }
@@ -61,22 +29,22 @@ function finish() {
   }, 180);
 }
 
+function waitForUrlChange(from: string, cb: () => void) {
+  let checks = 0;
+  const max = 40;
+  function tick() {
+    checks++;
+    if (location.pathname + location.search !== from || checks >= max) {
+      cb();
+    } else {
+      setTimeout(tick, checks < 8 ? 50 : 150);
+    }
+  }
+  tick();
+}
+
 export function NavigationProgress() {
   useEffect(() => {
-    let prev = location.pathname + location.search;
-    let hideTimer: ReturnType<typeof setTimeout>;
-
-    const onPathChange = () => {
-      const now = location.pathname + location.search;
-      if (now !== prev) {
-        prev = now;
-        clearTimeout(hideTimer);
-        hideTimer = setTimeout(finish, 50);
-      }
-    };
-
-    const uninstallHistory = installHistoryPatch(start);
-
     function onClick(e: MouseEvent) {
       if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey) return;
       const a = (e.target as Element | null)?.closest?.("a[href]");
@@ -91,21 +59,11 @@ export function NavigationProgress() {
         return;
       }
       start();
+      waitForUrlChange(location.pathname + location.search, finish);
     }
 
-    window.addEventListener(START, start);
-    window.addEventListener(FINISH, finish);
-    window.addEventListener("popstate", onPathChange);
     document.addEventListener("click", onClick, { capture: true });
-
-    return () => {
-      uninstallHistory();
-      clearTimeout(hideTimer);
-      window.removeEventListener(START, start);
-      window.removeEventListener(FINISH, finish);
-      window.removeEventListener("popstate", onPathChange);
-      document.removeEventListener("click", onClick, { capture: true });
-    };
+    return () => document.removeEventListener("click", onClick, { capture: true });
   }, []);
 
   return (

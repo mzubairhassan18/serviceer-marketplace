@@ -1,19 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
-import { Search } from "lucide-react";
 import { formatPrice } from "@/lib/format";
-
-const categories = [
-  { name: "Plumbing", icon: "Wrench", color: "#3b82f6" },
-  { name: "Electrical", icon: "Zap", color: "#f59e0b" },
-  { name: "Painting", icon: "PaintBucket", color: "#10b981" },
-  { name: "Cleaning", icon: "Spray", color: "#8b5cf6" },
-  { name: "Carpentry", icon: "Brush", color: "#f97316" },
-  { name: "Security", icon: "Shield", color: "#ef4444" },
-  { name: "Construction", icon: "HardHat", color: "#6366f1" },
-  { name: "More", icon: "Search", color: "#64748b" },
-];
+import { HeroSearch } from "@/components/hero-search";
 
 export default async function HomePage() {
   const supabase = createClient(await cookies());
@@ -35,32 +24,7 @@ export default async function HomePage() {
         <p style={{ fontSize: "1.1rem", opacity: 0.8, marginBottom: "1.5rem" }}>
           Find trusted professionals for any job
         </p>
-        <div className="search-bar">
-          <input type="text" placeholder="Search for a service..." />
-          <Link href="/search" className="btn btn-primary" style={{ padding: "0.75rem 1.5rem", textDecoration: "none" }}>
-            <Search size={18} /> Search
-          </Link>
-        </div>
-        <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-          <Link href="/gigs?tag=plumbing" style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem" }}>Plumbing</Link>
-          <Link href="/gigs?tag=electrical" style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem" }}>Electrical</Link>
-          <Link href="/gigs?tag=cleaning" style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem" }}>Cleaning</Link>
-          <Link href="/gigs?tag=painting" style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.875rem" }}>Painting</Link>
-        </div>
-      </section>
-
-      <section>
-        <div className="section-header">
-          <h2 className="section-title">Categories</h2>
-        </div>
-        <div className="category-grid">
-          {categories.map((cat) => (
-            <Link key={cat.name} href={`/gigs?category=${cat.name.toLowerCase()}`} className="category-card" style={{ textDecoration: "none", color: "inherit" }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{cat.name.charAt(0)}</div>
-              <div style={{ fontWeight: 500 }}>{cat.name}</div>
-            </Link>
-          ))}
-        </div>
+        <HeroSearch />
       </section>
 
       <section>

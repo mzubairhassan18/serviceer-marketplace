@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { formatPrice } from "@/lib/format";
 
 export default async function AdminPackagesPage() {
   const supabase = createClient(await cookies());
@@ -18,7 +19,7 @@ export default async function AdminPackagesPage() {
             <h3 style={{ fontWeight: 600, fontSize: "1.1rem" }}>{pkg.name}</h3>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>{pkg.description}</p>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, margin: "1rem 0" }}>
-              Rs. {pkg.price_minor}
+              {formatPrice(pkg.price_minor)}
             </div>
             <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
               Duration: {pkg.duration_days} days

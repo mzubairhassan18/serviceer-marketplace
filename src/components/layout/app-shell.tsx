@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, MessageSquare, ShoppingBag, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Briefcase, MessageSquare, ShoppingBag, CreditCard, Settings, LogOut } from "lucide-react";
 import { signOutAction } from "@/app/auth/actions";
 
 export function AppShell({ children, user }: { children: React.ReactNode; user: { email: string; name: string } }) {
@@ -13,6 +13,7 @@ export function AppShell({ children, user }: { children: React.ReactNode; user: 
     { href: "/app/gigs", label: "My Gigs", icon: Briefcase },
     { href: "/app/orders", label: "Orders", icon: ShoppingBag },
     { href: "/app/messages", label: "Messages", icon: MessageSquare },
+    { href: "/app/packages", label: "Packages", icon: CreditCard },
     { href: "/app/settings", label: "Settings", icon: Settings },
   ];
 
