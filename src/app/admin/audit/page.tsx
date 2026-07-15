@@ -6,7 +6,7 @@ export default async function AdminAuditPage() {
   const { data: events } = await supabase
     .from("audit_events")
     .select("*")
-    .order("occurredAt", { ascending: false })
+    .order("occurred_at", { ascending: false })
     .limit(100);
 
   return (
@@ -26,12 +26,12 @@ export default async function AdminAuditPage() {
           {events?.map((e: any) => (
             <tr key={e.id}>
               <td><span className="status-badge">{e.action}</span></td>
-              <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{e.entityType}</td>
+              <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{e.entity_type}</td>
               <td style={{ fontSize: "0.875rem", maxWidth: "300px", overflow: "hidden", textOverflow: "ellipsis" }}>
                 {e.summary}
               </td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                {new Date(e.occurredAt).toLocaleString()}
+                {new Date(e.occurred_at).toLocaleString()}
               </td>
             </tr>
           ))}

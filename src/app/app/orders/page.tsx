@@ -9,8 +9,8 @@ export default async function OrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select("*, gigs!gig_id(title)")
-    .or(`buyerId.eq.${user!.id},providerId.eq.${user!.id}`)
-    .order("createdAt", { ascending: false });
+    .or(`buyer_id.eq.${user!.id},provider_id.eq.${user!.id}`)
+    .order("created_at", { ascending: false });
 
   return (
     <div>
@@ -36,7 +36,7 @@ export default async function OrdersPage() {
                 <td style={{ fontWeight: 500 }}>{o.gigs?.title ?? "Unknown"}</td>
                 <td><span className={`status-badge`}>{o.status}</span></td>
                 <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                  {new Date(o.createdAt).toLocaleDateString()}
+                  {new Date(o.created_at).toLocaleDateString()}
                 </td>
                 <td>
                   <Link href={`/app/orders/${o.id}`} className="btn btn-sm" style={{ textDecoration: "none" }}>View</Link>

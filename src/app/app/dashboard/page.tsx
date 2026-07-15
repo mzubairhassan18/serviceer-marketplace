@@ -14,17 +14,17 @@ export default async function DashboardPage() {
   const { data: myGigs } = await supabase
     .from("gigs")
     .select("id, title, status", { count: "exact" })
-    .eq("providerId", user!.id);
+    .eq("provider_id", user!.id);
 
   const { count: orderCount } = await supabase
     .from("orders")
     .select("*", { count: "exact", head: true })
-    .eq("providerId", user!.id);
+    .eq("provider_id", user!.id);
 
   const { count: activeSubs } = await supabase
     .from("provider_subscriptions")
     .select("*", { count: "exact", head: true })
-    .eq("providerId", user!.id)
+    .eq("provider_id", user!.id)
     .eq("status", "active");
 
   return (

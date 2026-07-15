@@ -6,7 +6,7 @@ export default async function AdminUsersPage() {
   const { data: users } = await supabase
     .from("profiles")
     .select("*")
-    .order("createdAt", { ascending: false });
+    .order("created_at", { ascending: false });
 
   return (
     <div>
@@ -29,7 +29,7 @@ export default async function AdminUsersPage() {
               <td><span className={`status-badge`}>{u.role}</span></td>
               <td>{u.phone ?? "-"}</td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                {new Date(u.createdAt).toLocaleDateString()}
+                {new Date(u.created_at).toLocaleDateString()}
               </td>
             </tr>
           ))}

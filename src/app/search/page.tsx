@@ -9,12 +9,14 @@ export default async function SearchPage(props: { searchParams: Promise<{ q: str
   let gigs: any[] = [];
 
   if (q) {
+    const query = `%${q}%`;
     const { data } = await supabase
       .from("gigs")
       .select("*, profiles!provider_id(name)")
       .eq("status", "approved")
-      .textSearch("title", q, { config: "english" })
-      .order("createdAt", { ascending: false });
+      .or(`title.ilike.${query},description.ilike.${query},category.ilike.${query},tags.cs.{${q}}`)
+      .order("created_at", { ascending: false })
+      .limit(50);
 
     gigs = data ?? [];
   }

@@ -19,7 +19,7 @@ export async function POST(request: Request) {
   const { data: gig, error } = await supabase
     .from("gigs")
     .insert({
-      providerId: user.id,
+      provider_id: user.id,
       title,
       category,
       description,

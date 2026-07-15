@@ -7,7 +7,7 @@ export default async function AdminGigsPage() {
   const { data: gigs } = await supabase
     .from("gigs")
     .select("*, profiles!provider_id(name)")
-    .order("createdAt", { ascending: false });
+    .order("created_at", { ascending: false });
 
   return (
     <div>
@@ -34,7 +34,7 @@ export default async function AdminGigsPage() {
               <td>Rs. {gig.price}</td>
               <td><span className={`status-badge ${gig.status}`}>{gig.status}</span></td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                {new Date(gig.createdAt).toLocaleDateString()}
+                {new Date(gig.created_at).toLocaleDateString()}
               </td>
               <td>
                 {gig.status === "pending" && (

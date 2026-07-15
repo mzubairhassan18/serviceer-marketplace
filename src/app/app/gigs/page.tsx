@@ -10,8 +10,8 @@ export default async function MyGigsPage() {
   const { data: gigs } = await supabase
     .from("gigs")
     .select("*")
-    .eq("providerId", user!.id)
-    .order("createdAt", { ascending: false });
+    .eq("provider_id", user!.id)
+    .order("created_at", { ascending: false });
 
   return (
     <div>
@@ -47,7 +47,7 @@ export default async function MyGigsPage() {
                 <td>Rs. {gig.price}</td>
                 <td><span className={`status-badge ${gig.status}`}>{gig.status}</span></td>
                 <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                  {new Date(gig.createdAt).toLocaleDateString()}
+                  {new Date(gig.created_at).toLocaleDateString()}
                 </td>
                 <td>
                   <Link href={`/app/gigs/${gig.id}/edit`} className="btn btn-sm" style={{ textDecoration: "none" }}>Edit</Link>

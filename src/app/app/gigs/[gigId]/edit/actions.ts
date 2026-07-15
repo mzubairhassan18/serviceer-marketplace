@@ -18,9 +18,9 @@ export async function updateGigAction(formData: FormData) {
 
   const { error } = await supabase
     .from("gigs")
-    .update({ title, description, price: price * 100, tags, updatedAt: new Date().toISOString() })
+    .update({ title, description, price: price * 100, tags, updated_at: new Date().toISOString() })
     .eq("id", gigId)
-    .eq("providerId", user.id);
+    .eq("provider_id", user.id);
 
   if (error) throw new Error(error.message);
   redirect("/app/gigs");

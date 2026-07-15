@@ -15,7 +15,7 @@ export async function GET(request: Request) {
   if (tag) query = query.contains("tags", [tag]);
   if (q) query = query.textSearch("title", q, { config: "english" });
 
-  const { data: gigs, error } = await query.order("createdAt", { ascending: false });
+  const { data: gigs, error } = await query.order("created_at", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ gigs });

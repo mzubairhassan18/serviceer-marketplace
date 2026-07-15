@@ -6,7 +6,7 @@ export default async function AdminOrdersPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select("*, gigs!gig_id(title), profiles!buyer_id(name)")
-    .order("createdAt", { ascending: false });
+    .order("created_at", { ascending: false });
 
   return (
     <div>
@@ -29,7 +29,7 @@ export default async function AdminOrdersPage() {
               <td>{o.profiles?.name ?? "Unknown"}</td>
               <td><span className={`status-badge`}>{o.status}</span></td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                {new Date(o.createdAt).toLocaleDateString()}
+                {new Date(o.created_at).toLocaleDateString()}
               </td>
             </tr>
           ))}

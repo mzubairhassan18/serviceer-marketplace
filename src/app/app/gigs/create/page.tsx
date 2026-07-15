@@ -9,7 +9,7 @@ export default async function CreateGigPage() {
   if (!user) redirect("/sign-in");
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "provider") redirect("/app");
+  if (!profile) redirect("/sign-in");
 
   return (
     <div style={{ maxWidth: "600px" }}>

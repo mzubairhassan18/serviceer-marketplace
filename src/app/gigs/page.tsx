@@ -12,7 +12,7 @@ export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?
   if (category) query = query.eq("category", category);
   if (tag) query = query.contains("tags", [tag]);
 
-  const { data: gigs } = await query.order("createdAt", { ascending: false });
+  const { data: gigs } = await query.order("created_at", { ascending: false });
 
   return (
     <div>
@@ -35,7 +35,7 @@ export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?
                   {gig.title.charAt(0)}
                 </div>
                 <div className="gig-card-body">
-                  {gig.featuredUntil && new Date(gig.featuredUntil) > new Date() && (
+                  {gig.featured_until && new Date(gig.featured_until) > new Date() && (
                     <span className="featured-badge">Featured</span>
                   )}
                   <h3 style={{ fontWeight: 600, marginTop: "0.25rem" }}>{gig.title}</h3>

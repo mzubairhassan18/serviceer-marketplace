@@ -15,7 +15,7 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
 
   if (!gig) notFound();
 
-  const isFeatured = gig.featuredUntil && new Date(gig.featuredUntil) > new Date();
+  const isFeatured = gig.featured_until && new Date(gig.featured_until) > new Date();
 
   return (
     <div style={{ maxWidth: "800px", margin: "2rem auto", padding: "0 1rem" }}>
@@ -51,7 +51,7 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
           <p style={{ fontWeight: 500 }}>{gig.profiles?.name}</p>
           <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>{gig.location}</p>
 
-          <Link href={`/contact?gigId=${gig.id}&providerId=${gig.providerId}`} className="btn btn-primary" style={{ textDecoration: "none", display: "inline-block", marginTop: "1rem" }}>
+          <Link href={`/contact?gigId=${gig.id}&providerId=${gig.provider_id}`} className="btn btn-primary" style={{ textDecoration: "none", display: "inline-block", marginTop: "1rem" }}>
             Contact Provider
           </Link>
         </div>

@@ -19,8 +19,8 @@ export default async function MessageThreadPage(props: { params: Promise<{ order
   const { data: messages } = await supabase
     .from("messages")
     .select("*")
-    .eq("orderId", orderId)
-    .order("createdAt", { ascending: true });
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: true });
 
   return (
     <div>

@@ -15,7 +15,7 @@ export function OrderChat({ orderId, userId, initialMessages }: { orderId: strin
     const supabase = createClient();
     const { data, error } = await supabase
       .from("messages")
-      .insert({ orderId, senderId: userId, body: body.trim() })
+      .insert({ order_id: orderId, sender_id: userId, body: body.trim() })
       .select()
       .single();
 
@@ -35,7 +35,7 @@ export function OrderChat({ orderId, userId, initialMessages }: { orderId: strin
           </p>
         )}
         {messages.map((msg) => {
-          const isMe = msg.senderId === userId;
+          const isMe = msg.sender_id === userId;
           return (
             <div key={msg.id} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start" }}>
               <div style={{
@@ -48,7 +48,7 @@ export function OrderChat({ orderId, userId, initialMessages }: { orderId: strin
               }}>
                 {msg.body}
                 <div style={{ fontSize: "0.7rem", opacity: 0.7, marginTop: "0.25rem" }}>
-                  {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                 </div>
               </div>
             </div>

@@ -9,8 +9,8 @@ export default async function MessagesPage() {
   const { data: orders } = await supabase
     .from("orders")
     .select("id, gigs!gig_id(title), status, profiles!buyer_id(name)")
-    .or(`buyerId.eq.${user!.id},providerId.eq.${user!.id}`)
-    .order("updatedAt", { ascending: false });
+    .or(`buyer_id.eq.${user!.id},provider_id.eq.${user!.id}`)
+    .order("updated_at", { ascending: false });
 
   return (
     <div>

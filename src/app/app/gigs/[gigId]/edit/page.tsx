@@ -9,7 +9,7 @@ export default async function EditGigPage(props: { params: Promise<{ gigId: stri
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/sign-in");
 
-  const { data: gig } = await supabase.from("gigs").select("*").eq("id", gigId).eq("providerId", user.id).single();
+  const { data: gig } = await supabase.from("gigs").select("*").eq("id", gigId).eq("provider_id", user.id).single();
   if (!gig) notFound();
 
   return (

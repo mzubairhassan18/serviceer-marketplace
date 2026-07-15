@@ -6,7 +6,7 @@ export default async function AdminPackagesPage() {
   const { data: packages } = await supabase
     .from("ad_packages")
     .select("*")
-    .order("priceMinor", { ascending: true });
+    .order("price_minor", { ascending: true });
 
   return (
     <div>
@@ -18,17 +18,17 @@ export default async function AdminPackagesPage() {
             <h3 style={{ fontWeight: 600, fontSize: "1.1rem" }}>{pkg.name}</h3>
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>{pkg.description}</p>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, margin: "1rem 0" }}>
-              Rs. {pkg.priceMinor}
+              Rs. {pkg.price_minor}
             </div>
             <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-              Duration: {pkg.durationDays} days
+              Duration: {pkg.duration_days} days
             </div>
             <div style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-              Priority Boost: {pkg.priorityBoost}x
+              Priority Boost: {pkg.priority_boost}x
             </div>
             <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-              <span className={`status-badge ${pkg.isActive ? "active" : "expired"}`}>
-                {pkg.isActive ? "Active" : "Inactive"}
+              <span className={`status-badge ${pkg.is_active ? "active" : "expired"}`}>
+                {pkg.is_active ? "Active" : "Inactive"}
               </span>
             </div>
           </div>

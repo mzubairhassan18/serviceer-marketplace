@@ -17,8 +17,10 @@ export async function createGigAction(formData: FormData) {
   const location = (formData.get("location") as string) || "";
   const tags = tagsRaw.split(",").map((t) => t.trim()).filter(Boolean);
 
+  await supabase.from("profiles").update({ role: "provider" }).eq("id", user.id);
+
   const { error } = await supabase.from("gigs").insert({
-    providerId: user.id,
+    provider_id: user.id,
     title,
     category,
     description,

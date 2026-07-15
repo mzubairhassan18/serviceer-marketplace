@@ -17,12 +17,12 @@ export async function sendContactAction(formData: FormData) {
   const { data: order, error } = await supabase
     .from("orders")
     .insert({
-      gigId,
-      buyerId: user.id,
-      providerId,
+      gig_id: gigId,
+      buyer_id: user.id,
+      provider_id: providerId,
       status: "inquiry",
-      initialMessage: message,
-      contactPhone: phone || null,
+      initial_message: message,
+      contact_phone: phone || null,
     })
     .select()
     .single();
@@ -30,8 +30,8 @@ export async function sendContactAction(formData: FormData) {
   if (error) throw new Error(error.message);
 
   await supabase.from("messages").insert({
-    orderId: order.id,
-    senderId: user.id,
+    order_id: order.id,
+    sender_id: user.id,
     body: message,
   });
 

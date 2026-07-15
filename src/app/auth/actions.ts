@@ -49,6 +49,16 @@ export async function signOutAction() {
   redirect("/sign-in");
 }
 
+export async function signInWithGoogleAction() {
+  const supabase = createClient(await cookies());
+  const { data } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/app` },
+  });
+  if (data.url) redirect(data.url);
+  authRedirect("/sign-in", "error", "Google sign-in is not configured. Try email instead.");
+}
+
 export async function forgotPasswordAction(formData: FormData) {
   const email = field(formData, "email").toLowerCase();
   if (!email) authRedirect("/forgot-password", "error", "Enter your email address.");

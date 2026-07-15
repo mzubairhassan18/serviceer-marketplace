@@ -3,17 +3,17 @@ export interface Profile {
   name: string;
   email: string;
   phone: string | null;
-  avatarUrl: string | null;
+  avatar_url: string | null;
   role: "buyer" | "provider" | "admin";
   locale: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Gig {
   id: string;
-  providerId: string;
-  providerName?: string;
+  provider_id: string;
+  provider_name?: string;
   title: string;
   description: string;
   category: string;
@@ -21,60 +21,60 @@ export interface Gig {
   price: number;
   currency: string;
   location: string;
-  coverImage: string | null;
+  cover_image: string | null;
   status: "draft" | "pending" | "approved" | "rejected" | "archived";
-  featuredUntil: string | null;
-  avgRating?: number;
-  reviewCount?: number;
-  createdAt: string;
-  updatedAt: string;
+  featured_until: string | null;
+  avg_rating?: number;
+  review_count?: number;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AdPackage {
   id: string;
   name: string;
   description: string;
-  priceMinor: number;
+  price_minor: number;
   currency: string;
-  durationDays: number;
-  priorityBoost: number;
+  duration_days: number;
+  priority_boost: number;
   features: Record<string, unknown>;
-  isActive: boolean;
-  createdAt: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 export interface ProviderSubscription {
   id: string;
-  providerId: string;
-  packageId: string;
-  packageName?: string;
+  provider_id: string;
+  package_id: string;
+  package_name?: string;
   status: "active" | "expired" | "cancelled";
-  startDate: string;
-  endDate: string;
-  paymentDetails: string | null;
-  createdAt: string;
+  start_date: string;
+  end_date: string;
+  payment_details: string | null;
+  created_at: string;
 }
 
 export interface Order {
   id: string;
-  gigId: string;
-  gigTitle?: string;
-  buyerId: string;
-  buyerName?: string;
-  providerId: string;
-  providerName?: string;
+  gig_id: string;
+  gig_title?: string;
+  buyer_id: string;
+  buyer_name?: string;
+  provider_id: string;
+  provider_name?: string;
   status: "inquiry" | "accepted" | "in_progress" | "completed" | "cancelled";
-  initialMessage: string;
-  contactPhone: string | null;
-  createdAt: string;
-  updatedAt: string;
+  initial_message: string;
+  contact_phone: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Message {
   id: string;
-  orderId: string;
-  senderId: string;
+  order_id: string;
+  sender_id: string;
   body: string;
-  readAt: string | null;
-  createdAt: string;
+  read_at: string | null;
+  created_at: string;
 }
