@@ -378,3 +378,51 @@
   font-size: 1.25rem;
   font-weight: 600;
 }
+
+/* Navigation progress bar */
+#np-wrap {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 1000;
+  height: 3px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 80ms ease-out;
+}
+
+#np-wrap.visible {
+  opacity: 1;
+}
+
+#np-bar {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  background: linear-gradient(90deg, #0f172a, #3b82f6 60%, #93c5fd 90%, #dbeafe);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.55), 0 0 24px rgba(59, 130, 246, 0.3);
+  transform-origin: left center;
+  will-change: transform;
+  transform: scaleX(0);
+  transition: transform 8s cubic-bezier(0.08, 0.82, 0.17, 1);
+}
+
+#np-wrap.visible #np-bar {
+  transform: scaleX(0.92);
+}
+
+#np-wrap.finishing #np-bar {
+  transform: scaleX(1) !important;
+  transition-duration: 150ms !important;
+}
+
+#np-bar::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7));
+}

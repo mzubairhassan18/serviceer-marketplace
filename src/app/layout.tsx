@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { createClient } from "@/utils/supabase/server";
 import { signOutAction } from "@/app/auth/actions";
+import { NavigationProgress } from "@/components/navigation-progress";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,6 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body>
+        <NavigationProgress />
         <header className="site-header">
           <Link href="/" className="site-logo">Serviceer</Link>
           <nav className="site-nav">
