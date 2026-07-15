@@ -30,7 +30,7 @@ export async function sendContactAction(formData: FormData) {
       status: "inquiry",
       description: description.trim(),
       offered_price: priceInPaisa,
-      initial_message: message?.trim() || null,
+      initial_message: message?.trim() || "",
       contact_phone: phone || null,
     })
     .select()
