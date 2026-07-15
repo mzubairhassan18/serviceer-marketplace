@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
+import { logAuditEvent } from "@/lib/audit";
 
 export async function subscribeAction(formData: FormData) {
   const supabase = createClient(await cookies());
@@ -33,4 +34,6 @@ export async function subscribeAction(formData: FormData) {
   });
 
   if (error) throw new Error(error.message);
+
+  await logAuditEvent("package_subscribed", "subscription", null, `Subscribed to package: ${pkg.name}`, { provider_id: user.id, package_name: pkg.name, price: pkg.price_minor });
 }

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { logAuditEvent } from "@/lib/audit";
 
 export async function resolveDisputeAction(formData: FormData) {
   const supabase = createClient(await cookies());
@@ -30,7 +31,6 @@ export async function resolveDisputeAction(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // Record status history
   await supabase.from("order_status_history").insert({
     order_id: orderId,
     from_status: order?.status ?? "disputed",
@@ -61,6 +61,8 @@ export async function resolveDisputeAction(formData: FormData) {
       sender_id: user.id,
       body: adminMsg,
     });
+
+    await logAuditEvent("dispute_resolved", "order", orderId, `Resolved dispute on: ${gigTitle}`, { resolution: resolution.trim() });
   }
 
   revalidatePath("/admin/orders");
@@ -92,7 +94,6 @@ export async function closeDisputeAction(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  // Record status history
   await supabase.from("order_status_history").insert({
     order_id: orderId,
     from_status: order?.status ?? "disputed",
@@ -122,6 +123,8 @@ export async function closeDisputeAction(formData: FormData) {
       sender_id: user.id,
       body: "This dispute has been closed by the admin.",
     });
+
+    await logAuditEvent("dispute_closed", "order", orderId, `Closed dispute on: ${gigTitle}`);
   }
 
   revalidatePath("/admin/orders");
@@ -158,7 +161,6 @@ export async function adminUpdateOrderStatusAction(formData: FormData) {
   const { error } = await supabase.from("orders").update(update).eq("id", orderId);
   if (error) throw new Error(error.message);
 
-  // Record status history
   await supabase.from("order_status_history").insert({
     order_id: orderId,
     from_status: fromStatus,
@@ -181,6 +183,8 @@ export async function adminUpdateOrderStatusAction(formData: FormData) {
         href: `/app/orders/${orderId}`,
       });
     }
+
+    await logAuditEvent("admin_status_update", "order", orderId, `Updated "${gigTitle}" from ${fromStatus} to ${newStatus}`);
   }
 
   revalidatePath("/admin/orders");

@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { logAuditEvent } from "@/lib/audit";
 
 export async function approveBoostAction(formData: FormData) {
   const boostId = formData.get("boostId") as string;
@@ -36,6 +37,8 @@ export async function approveBoostAction(formData: FormData) {
     href: `/app/gigs`,
   });
 
+  await logAuditEvent("boost_approved", "gig_boost", boostId, `Approved boost for: ${gigTitle}`);
+
   revalidatePath("/admin/boosts");
 }
 
@@ -66,6 +69,8 @@ export async function rejectBoostAction(formData: FormData) {
     entity_id: boost.gig_id,
     href: `/app/gigs`,
   });
+
+  await logAuditEvent("boost_rejected", "gig_boost", boostId, `Rejected boost for: ${gigTitle}`);
 
   revalidatePath("/admin/boosts");
 }

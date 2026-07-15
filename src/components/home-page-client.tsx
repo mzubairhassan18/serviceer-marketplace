@@ -49,27 +49,25 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
     return result;
   }, [allGigs, q, category]);
 
-  const featuredFiltered = filteredGigs.filter((g) => g.featured_until && new Date(g.featured_until) > new Date());
-  const otherFiltered = filteredGigs.filter((g) => !g.featured_until || new Date(g.featured_until) <= new Date());
+  const isFeatured = (g: GigWithStats) => g.featured_until && new Date(g.featured_until) > new Date();
 
-  // When not filtering, show all gigs grouped
-  const allFeatured = allGigs.filter((g) => g.featured_until && new Date(g.featured_until) > new Date());
-  const allOther = allGigs.filter((g) => !g.featured_until || new Date(g.featured_until) <= new Date());
+  const featuredFiltered = filteredGigs.filter(isFeatured);
+  const otherFiltered = filteredGigs.filter((g) => !isFeatured(g));
 
-  // Group other gigs by category when not filtering
+  const allFeatured = allGigs.filter(isFeatured);
+  const allOther = allGigs.filter((g) => !isFeatured(g));
+
   const categoryGroups = useMemo(() => {
-    const source = isFiltering ? otherFiltered : allOther;
     const groups: Record<string, GigWithStats[]> = {};
-    for (const gig of source) {
+    for (const gig of allOther) {
       const cat = gig.category || "Other";
       if (!groups[cat]) groups[cat] = [];
       groups[cat].push(gig);
     }
     return groups;
-  }, [allOther, otherFiltered, isFiltering]);
+  }, [allOther]);
 
   const displayFeatured = isFiltering ? featuredFiltered : allFeatured;
-  const hasResults = filteredGigs.length > 0;
 
   return (
     <div>
@@ -84,7 +82,6 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
       </section>
 
       <div className="container" style={{ paddingTop: "1.5rem" }}>
-        {/* View toggle — always at top */}
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1.25rem" }}>
           <ViewToggle onChange={setView} />
         </div>
@@ -108,11 +105,11 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
           </div>
         )}
 
-        {/* Featured gigs */}
-        {displayFeatured.length > 0 && (
+        {/* Relevant results when filtering */}
+        {isFiltering && displayFeatured.length > 0 && (
           <section style={{ marginBottom: "2rem" }}>
-            <div className="section-header" style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">{isFiltering ? "Featured Results" : "Featured"}</h2>
+            <div style={{ padding: 0, marginBottom: "1rem" }}>
+              <h2 className="section-title">Featured Results</h2>
             </div>
             <div className={view === "grid" ? "gig-grid" : "gig-list"}>
               {displayFeatured.map((gig) => (
@@ -122,47 +119,100 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
           </section>
         )}
 
-        {/* Category groups or filtered results */}
-        {isFiltering ? (
-          // Filtered: show non-featured results
-          otherFiltered.length > 0 && (
-            <section style={{ marginBottom: "2rem" }}>
-              <div className="section-header" style={{ padding: 0, marginBottom: "1rem" }}>
-                <h2 className="section-title">Other Results</h2>
-              </div>
-              <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-                {otherFiltered.map((gig) => (
-                  <GigCard key={gig.id} gig={gig} view={view} />
-                ))}
-              </div>
-            </section>
-          )
-        ) : (
-          // Not filtering: show by category
-          Object.entries(categoryGroups).map(([cat, gigs]) => (
-            <section key={cat} style={{ marginBottom: "2rem" }}>
-              <div className="section-header" style={{ padding: 0, marginBottom: "1rem" }}>
-                <h2 className="section-title">{cat}</h2>
-                {gigs.length > 4 && (
-                  <Link
-                    href={`/?category=${cat.toLowerCase()}`}
-                    style={{ fontSize: "0.8rem", color: "var(--accent)", textDecoration: "none" }}
-                  >
-                    View all
-                  </Link>
-                )}
-              </div>
-              <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-                {gigs.slice(0, 4).map((gig) => (
-                  <GigCard key={gig.id} gig={gig} view={view} />
-                ))}
-              </div>
-            </section>
-          ))
+        {isFiltering && otherFiltered.length > 0 && (
+          <section style={{ marginBottom: "2rem" }}>
+            <div style={{ padding: 0, marginBottom: "1rem" }}>
+              <h2 className="section-title">Other Results</h2>
+            </div>
+            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+              {otherFiltered.map((gig) => (
+                <GigCard key={gig.id} gig={gig} view={view} />
+              ))}
+            </div>
+          </section>
         )}
 
-        {/* Empty state */}
-        {isFiltering && !hasResults && (
+        {/* Always show: All gigs section */}
+        {displayFeatured.length > 0 && !isFiltering && (
+          <section style={{ marginBottom: "2rem" }}>
+            <div style={{ padding: 0, marginBottom: "1rem" }}>
+              <h2 className="section-title">Featured</h2>
+            </div>
+            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+              {displayFeatured.map((gig) => (
+                <GigCard key={gig.id} gig={gig} view={view} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* All gigs - show when not filtering (featured + non-featured) */}
+        {!isFiltering && allOther.length > 0 && (
+          <section style={{ marginBottom: "2rem" }}>
+            <div style={{ padding: 0, marginBottom: "1rem" }}>
+              <h2 className="section-title">All Services</h2>
+            </div>
+            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+              {allOther.map((gig) => (
+                <GigCard key={gig.id} gig={gig} view={view} />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* When filtering, also show all gigs + category groups below results */}
+        {isFiltering && allOther.length > 0 && (
+          <>
+            <section style={{ marginBottom: "2rem" }}>
+              <div style={{ padding: 0, marginBottom: "1rem" }}>
+                <h2 className="section-title">All Services</h2>
+              </div>
+              <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+                {allOther.map((gig) => (
+                  <GigCard key={gig.id} gig={gig} view={view} />
+                ))}
+              </div>
+            </section>
+
+            {Object.entries(categoryGroups).map(([cat, gigs]) => (
+              <section key={cat} style={{ marginBottom: "2rem" }}>
+                <div style={{ padding: 0, marginBottom: "1rem" }}>
+                  <h2 className="section-title">{cat}</h2>
+                </div>
+                <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+                  {gigs.slice(0, 4).map((gig) => (
+                    <GigCard key={gig.id} gig={gig} view={view} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        )}
+
+        {/* Category groups when not filtering */}
+        {!isFiltering && Object.entries(categoryGroups).map(([cat, gigs]) => (
+          <section key={cat} style={{ marginBottom: "2rem" }}>
+            <div style={{ padding: 0, marginBottom: "1rem" }}>
+              <h2 className="section-title">{cat}</h2>
+              {gigs.length > 4 && (
+                <Link
+                  href={`/?category=${cat.toLowerCase()}`}
+                  style={{ fontSize: "0.8rem", color: "var(--accent)", textDecoration: "none" }}
+                >
+                  View all
+                </Link>
+              )}
+            </div>
+            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
+              {gigs.slice(0, 4).map((gig) => (
+                <GigCard key={gig.id} gig={gig} view={view} />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {/* Empty states */}
+        {isFiltering && filteredGigs.length === 0 && (
           <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
             <p style={{ color: "var(--muted-foreground)", marginBottom: "1rem" }}>
               No services found for this search.

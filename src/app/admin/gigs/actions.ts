@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
+import { logAuditEvent } from "@/lib/audit";
 
 export async function approveGigAction(formData: FormData) {
   const gigId = formData.get("gigId") as string;
@@ -26,6 +27,8 @@ export async function approveGigAction(formData: FormData) {
       entity_id: gigId,
       href: `/app/gigs`,
     });
+
+    await logAuditEvent("gig_approved", "gig", gigId, `Approved gig: ${gig.title}`);
   }
 
   revalidatePath("/admin/gigs");
@@ -53,6 +56,8 @@ export async function rejectGigAction(formData: FormData) {
       entity_id: gigId,
       href: `/app/gigs`,
     });
+
+    await logAuditEvent("gig_rejected", "gig", gigId, `Rejected gig: ${gig.title}`);
   }
 
   revalidatePath("/admin/gigs");
