@@ -3,6 +3,19 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getPublicSupabaseEnv } from "@/lib/supabase/env";
 import { createServerClient } from "@supabase/ssr";
 
+const publicPaths = [
+  "/sign-in",
+  "/sign-up",
+  "/forgot-password",
+  "/update-password",
+  "/auth",
+  "/gigs",
+  "/search",
+  "/contact",
+  "/",
+  "/offline",
+];
+
 export async function middleware(request: NextRequest) {
   const { publishableKey, url } = getPublicSupabaseEnv();
 
@@ -23,8 +36,10 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user && !request.nextUrl.pathname.startsWith("/auth") && !request.nextUrl.pathname.startsWith("/_next") && request.nextUrl.pathname !== "/") {
-    const redirectUrl = new URL("/auth/sign-in", request.url);
+  const isPublic = publicPaths.some((p) => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + "/"));
+
+  if (!user && !isPublic) {
+    const redirectUrl = new URL("/sign-in", request.url);
     redirectUrl.searchParams.set("redirectTo", request.nextUrl.pathname);
     return NextResponse.redirect(redirectUrl);
   }
