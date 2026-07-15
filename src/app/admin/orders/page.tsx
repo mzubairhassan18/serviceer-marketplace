@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 
 export default async function AdminOrdersPage() {
@@ -24,10 +25,18 @@ export default async function AdminOrdersPage() {
         <tbody>
           {orders?.map((o: any) => (
             <tr key={o.id}>
-              <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>{o.id.slice(0, 8)}</td>
-              <td>{o.gigs?.title ?? "Unknown"}</td>
+              <td style={{ fontFamily: "monospace", fontSize: "0.8rem" }}>
+                <Link href={`/admin/orders/${o.id}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                  {o.id.slice(0, 8)}
+                </Link>
+              </td>
+              <td>
+                <Link href={`/admin/orders/${o.id}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                  {o.gigs?.title ?? "Unknown"}
+                </Link>
+              </td>
               <td>{o.profiles?.name ?? "Unknown"}</td>
-              <td><span className={`status-badge`}>{o.status}</span></td>
+              <td><span className={`status-badge ${o.status}`}>{o.status}</span></td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
                 {new Date(o.created_at).toLocaleDateString()}
               </td>

@@ -86,7 +86,7 @@ export interface Order {
   buyer_name?: string;
   provider_id: string;
   provider_name?: string;
-  status: "inquiry" | "offered" | "accepted" | "in_progress" | "delivered" | "payment_received" | "completed" | "cancelled" | "disputed";
+  status: "inquiry" | "offered" | "accepted" | "in_progress" | "delivered" | "payment_received" | "completed" | "cancelled" | "disputed" | "dispute_resolved" | "dispute_closed";
   initial_message: string;
   description: string;
   offered_price: number | null;

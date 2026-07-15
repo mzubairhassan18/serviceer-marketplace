@@ -24,7 +24,7 @@ const timestamps = {
 /* ── Enums ── */
 export const userRole = pgEnum("user_role", ["buyer", "provider", "admin"]);
 export const gigStatus = pgEnum("gig_status", ["draft", "pending", "approved", "rejected", "archived"]);
-export const orderStatus = pgEnum("order_status", ["inquiry", "offered", "accepted", "in_progress", "delivered", "payment_received", "completed", "cancelled", "disputed"]);
+export const orderStatus = pgEnum("order_status", ["inquiry", "offered", "accepted", "in_progress", "delivered", "payment_received", "completed", "cancelled", "disputed", "dispute_resolved", "dispute_closed"]);
 export const subStatus = pgEnum("subscription_status", ["active", "expired", "cancelled"]);
 
 /* ── Profiles ── */

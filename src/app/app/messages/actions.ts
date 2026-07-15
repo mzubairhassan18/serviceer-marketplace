@@ -23,19 +23,25 @@ export async function sendMessageAction(orderId: string, body: string) {
     .single();
 
   if (order) {
-    const recipientId = order.buyer_id === user.id ? order.provider_id : order.buyer_id;
+    const { data: sender } = await supabase.from("profiles").select("name, role").eq("id", user.id).single();
     const gigTitle = (order as any).gigs?.title ?? "your order";
-    const { data: sender } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+    const isAdmin = sender?.role === "admin";
 
-    await supabase.from("notifications").insert({
-      user_id: recipientId,
-      title: `New message from ${sender?.name ?? "someone"}`,
-      body: body.trim().slice(0, 120),
-      type: "message",
-      entity_type: "order",
-      entity_id: orderId,
-      href: `/app/orders/${orderId}`,
-    });
+    const recipients = isAdmin
+      ? [order.buyer_id, order.provider_id]
+      : [order.buyer_id === user.id ? order.provider_id : order.buyer_id];
+
+    for (const recipientId of recipients) {
+      await supabase.from("notifications").insert({
+        user_id: recipientId,
+        title: isAdmin ? `Admin message on "${gigTitle}"` : `New message from ${sender?.name ?? "someone"}`,
+        body: isAdmin ? body.trim().slice(0, 120) : body.trim().slice(0, 120),
+        type: "message",
+        entity_type: "order",
+        entity_id: orderId,
+        href: `/app/orders/${orderId}`,
+      });
+    }
   }
 
   return msg;
