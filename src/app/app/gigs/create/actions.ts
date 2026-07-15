@@ -19,7 +19,7 @@ export async function createGigAction(formData: FormData) {
 
   await supabase.from("profiles").update({ role: "provider" }).eq("id", user.id);
 
-  const { error } = await supabase.from("gigs").insert({
+  const { data: gig, error } = await supabase.from("gigs").insert({
     provider_id: user.id,
     title,
     category,
@@ -29,8 +29,31 @@ export async function createGigAction(formData: FormData) {
     location,
     status: "pending",
     currency: "PKR",
-  });
+  }).select("id").single();
 
   if (error) throw new Error(error.message);
+
+  // Notify all admins
+  const { data: admins } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("role", "admin");
+
+  const { data: provider } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+
+  if (admins && admins.length > 0) {
+    for (const admin of admins) {
+      await supabase.from("notifications").insert({
+        user_id: admin.id,
+        title: `New gig submitted: ${title}`,
+        body: `By ${provider?.name ?? "a provider"} — awaiting review`,
+        type: "gig_created",
+        entity_type: "gig",
+        entity_id: gig?.id,
+        href: `/admin/gigs`,
+      });
+    }
+  }
+
   redirect("/app/gigs");
 }

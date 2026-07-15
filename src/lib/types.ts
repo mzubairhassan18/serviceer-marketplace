@@ -119,3 +119,14 @@ export interface Review {
   body: string;
   created_at: string;
 }
+
+export interface OrderStatusHistory {
+  id: string;
+  order_id: string;
+  from_status: string | null;
+  to_status: string;
+  actor_id: string | null;
+  actor_name: string;
+  note: string;
+  created_at: string;
+}

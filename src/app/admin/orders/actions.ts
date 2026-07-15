@@ -9,7 +9,7 @@ export async function resolveDisputeAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: admin } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: admin } = await supabase.from("profiles").select("role, name").eq("id", user.id).single();
   if (admin?.role !== "admin") throw new Error("Not authorized");
 
   const orderId = formData.get("orderId") as string;
@@ -19,7 +19,7 @@ export async function resolveDisputeAction(formData: FormData) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("buyer_id, provider_id, gig_id, gigs(title)")
+    .select("status, buyer_id, provider_id, gig_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
@@ -29,6 +29,16 @@ export async function resolveDisputeAction(formData: FormData) {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+
+  // Record status history
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: order?.status ?? "disputed",
+    to_status: "dispute_resolved",
+    actor_id: user.id,
+    actor_name: admin?.name ?? "Admin",
+    note: resolution.trim(),
+  });
 
   if (order) {
     const gigTitle = (order as any).gigs?.title ?? "your order";
@@ -64,14 +74,14 @@ export async function closeDisputeAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: admin } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: admin } = await supabase.from("profiles").select("role, name").eq("id", user.id).single();
   if (admin?.role !== "admin") throw new Error("Not authorized");
 
   const orderId = formData.get("orderId") as string;
 
   const { data: order } = await supabase
     .from("orders")
-    .select("buyer_id, provider_id, gig_id, gigs(title)")
+    .select("status, buyer_id, provider_id, gig_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
@@ -81,6 +91,16 @@ export async function closeDisputeAction(formData: FormData) {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
+
+  // Record status history
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: order?.status ?? "disputed",
+    to_status: "dispute_closed",
+    actor_id: user.id,
+    actor_name: admin?.name ?? "Admin",
+    note: "",
+  });
 
   if (order) {
     const gigTitle = (order as any).gigs?.title ?? "your order";
@@ -115,7 +135,7 @@ export async function adminUpdateOrderStatusAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
-  const { data: admin } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  const { data: admin } = await supabase.from("profiles").select("role, name").eq("id", user.id).single();
   if (admin?.role !== "admin") throw new Error("Not authorized");
 
   const orderId = formData.get("orderId") as string;
@@ -126,16 +146,27 @@ export async function adminUpdateOrderStatusAction(formData: FormData) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("buyer_id, provider_id, gigs(title)")
+    .select("status, buyer_id, provider_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
+  const fromStatus = order?.status;
   const update: Record<string, any> = { status: newStatus };
   if (newStatus === "delivered") update.delivered_at = new Date().toISOString();
   if (newStatus === "completed") update.completed_at = new Date().toISOString();
 
   const { error } = await supabase.from("orders").update(update).eq("id", orderId);
   if (error) throw new Error(error.message);
+
+  // Record status history
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: fromStatus,
+    to_status: newStatus,
+    actor_id: user.id,
+    actor_name: admin?.name ?? "Admin",
+    note: "",
+  });
 
   if (order) {
     const gigTitle = (order as any).gigs?.title ?? "your order";

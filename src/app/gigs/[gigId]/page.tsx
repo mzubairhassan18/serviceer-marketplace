@@ -27,6 +27,10 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
     .eq("gig_id", gigId)
     .order("created_at", { ascending: false });
 
+  const avgRating = reviews && reviews.length > 0
+    ? reviews.reduce((sum: number, r: any) => sum + r.rating, 0) / reviews.length
+    : 0;
+
   const isOwnGig = user?.id === gig.provider_id;
 
   return (
@@ -40,6 +44,24 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
           <div>
             <h1 style={{ fontSize: "1.5rem", fontWeight: 700 }}>{gig.title}</h1>
             {isFeatured && <span className="featured-badge" style={{ marginTop: "0.5rem" }}>Featured</span>}
+            {avgRating > 0 && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginTop: "0.5rem" }}>
+                <div style={{ display: "flex", gap: "1px" }}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Star
+                      key={i}
+                      size={16}
+                      fill={i < Math.round(avgRating) ? "#f59e0b" : "none"}
+                      stroke={i < Math.round(avgRating) ? "#f59e0b" : "var(--muted-foreground)"}
+                    />
+                  ))}
+                </div>
+                <span style={{ fontSize: "0.85rem", fontWeight: 500 }}>{avgRating.toFixed(1)}</span>
+                <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                  ({reviews?.length ?? 0} {reviews?.length === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{formatPrice(gig.price)}</div>
@@ -149,8 +171,8 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
                     <Star
                       key={i}
                       size={14}
-                      fill={i < r.rating ? "var(--primary)" : "none"}
-                      stroke={i < r.rating ? "var(--primary)" : "var(--muted-foreground)"}
+                      fill={i < r.rating ? "#f59e0b" : "none"}
+                      stroke={i < r.rating ? "#f59e0b" : "var(--muted-foreground)"}
                     />
                   ))}
                 </div>

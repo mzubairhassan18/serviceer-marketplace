@@ -207,6 +207,20 @@ export const auditEvents = pgTable("audit_events", {
   index("audit_events_entity_idx").on(table.entityType, table.entityId),
 ]).enableRLS();
 
+/* ── Order Status History ── */
+export const orderStatusHistory = pgTable("order_status_history", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  fromStatus: text("from_status"),
+  toStatus: text("to_status").notNull(),
+  actorId: uuid("actor_id").references(() => profiles.id, { onDelete: "set null" }),
+  actorName: text("actor_name").default("").notNull(),
+  note: text("note").default("").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("order_status_history_order_idx").on(table.orderId),
+]).enableRLS();
+
 /* -- Types -- */
 export type Profile = typeof profiles.$inferSelect;
 export type Gig = typeof gigs.$inferSelect;
@@ -217,3 +231,4 @@ export type Message = typeof messages.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type GigBoost = typeof gigBoosts.$inferSelect;
+export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { OrderChat } from "@/components/orders/order-chat";
+import { StatusTimeline } from "@/components/orders/status-timeline";
 import { AdminOrderControls } from "./admin-controls";
 
 export default async function AdminOrderDetailPage(props: { params: Promise<{ orderId: string }> }) {
@@ -21,6 +22,22 @@ export default async function AdminOrderDetailPage(props: { params: Promise<{ or
 
   const { data: messages } = await supabase
     .from("messages")
+    .select("*")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: true });
+
+  // Fetch sender profiles for chat
+  const senderIds = [...new Set((messages ?? []).map((m: any) => m.sender_id))];
+  const { data: senderProfiles } = senderIds.length > 0
+    ? await supabase.from("profiles").select("id, name, role").in("id", senderIds)
+    : { data: [] };
+
+  const senders: Record<string, { id: string; name: string; role?: string }> = {};
+  (senderProfiles ?? []).forEach((p: any) => { senders[p.id] = p; });
+
+  // Fetch status history
+  const { data: statusHistory } = await supabase
+    .from("order_status_history")
     .select("*")
     .eq("order_id", orderId)
     .order("created_at", { ascending: true });
@@ -83,13 +100,23 @@ export default async function AdminOrderDetailPage(props: { params: Promise<{ or
         </div>
       )}
 
+      <div style={{ marginBottom: "1.5rem" }}>
+        <StatusTimeline entries={statusHistory ?? []} />
+      </div>
+
       <div style={{ marginBottom: "1rem" }}>
         <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
           You are intervening as admin. Messages you send will appear in the chat.
         </p>
       </div>
 
-      <OrderChat orderId={order.id} userId={user!.id} initialMessages={messages ?? []} />
+      <OrderChat
+        orderId={order.id}
+        userId={user!.id}
+        initialMessages={messages ?? []}
+        senders={senders}
+        currentUserName="Admin"
+      />
     </div>
   );
 }

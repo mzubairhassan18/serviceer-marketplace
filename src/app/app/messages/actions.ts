@@ -8,6 +8,8 @@ export async function sendMessageAction(orderId: string, body: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Not authenticated");
 
+  const { data: sender } = await supabase.from("profiles").select("name, role").eq("id", user.id).single();
+
   const { data: msg, error } = await supabase
     .from("messages")
     .insert({ order_id: orderId, sender_id: user.id, body: body.trim() })
@@ -23,7 +25,6 @@ export async function sendMessageAction(orderId: string, body: string) {
     .single();
 
   if (order) {
-    const { data: sender } = await supabase.from("profiles").select("name, role").eq("id", user.id).single();
     const gigTitle = (order as any).gigs?.title ?? "your order";
     const isAdmin = sender?.role === "admin";
 
@@ -35,7 +36,7 @@ export async function sendMessageAction(orderId: string, body: string) {
       await supabase.from("notifications").insert({
         user_id: recipientId,
         title: isAdmin ? `Admin message on "${gigTitle}"` : `New message from ${sender?.name ?? "someone"}`,
-        body: isAdmin ? body.trim().slice(0, 120) : body.trim().slice(0, 120),
+        body: body.trim().slice(0, 120),
         type: "message",
         entity_type: "order",
         entity_id: orderId,

@@ -51,6 +51,7 @@ export async function updateOrderStatusAction(formData: FormData) {
     throw new Error(`Cannot transition from ${order.status} to ${newStatus}`);
   }
 
+  const fromStatus = order.status;
   const update: Record<string, any> = { status: newStatus };
   if (newStatus === "delivered") update.delivered_at = new Date().toISOString();
   if (newStatus === "completed") update.completed_at = new Date().toISOString();
@@ -58,10 +59,20 @@ export async function updateOrderStatusAction(formData: FormData) {
   const { error } = await supabase.from("orders").update(update).eq("id", orderId);
   if (error) throw new Error(error.message);
 
+  // Record status history
+  const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: fromStatus,
+    to_status: newStatus,
+    actor_id: user.id,
+    actor_name: actor?.name ?? "",
+    note: "",
+  });
+
   const recipientId = isBuyer ? order.provider_id : order.buyer_id;
   const gigTitle = (order as any).gigs?.title ?? "your order";
   const label = statusLabels[newStatus] || `updated order to "${newStatus}"`;
-  const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
 
   await supabase.from("notifications").insert({
     user_id: recipientId,
@@ -89,7 +100,7 @@ export async function raiseDisputeAction(formData: FormData) {
 
   const { data: order } = await supabase
     .from("orders")
-    .select("buyer_id, provider_id, gig_id, gigs(title)")
+    .select("status, buyer_id, provider_id, gig_id, gigs(title)")
     .eq("id", orderId)
     .single();
 
@@ -105,10 +116,20 @@ export async function raiseDisputeAction(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
+  // Record status history
+  const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: order?.status ?? null,
+    to_status: "disputed",
+    actor_id: user.id,
+    actor_name: actor?.name ?? "",
+    note: reason.trim(),
+  });
+
   if (order) {
     const recipientId = order.buyer_id === user.id ? order.provider_id : order.buyer_id;
     const gigTitle = (order as any).gigs?.title ?? "your order";
-    const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
 
     await supabase.from("notifications").insert({
       user_id: recipientId,
@@ -119,6 +140,22 @@ export async function raiseDisputeAction(formData: FormData) {
       entity_id: orderId,
       href: `/app/orders/${orderId}`,
     });
+
+    // Notify admin
+    const { data: admins } = await supabase.from("profiles").select("id").eq("role", "admin");
+    if (admins) {
+      for (const admin of admins) {
+        await supabase.from("notifications").insert({
+          user_id: admin.id,
+          title: `Dispute raised on "${gigTitle}"`,
+          body: `By ${actor?.name ?? "someone"} — ${reason.trim().slice(0, 100)}`,
+          type: "dispute",
+          entity_type: "order",
+          entity_id: orderId,
+          href: `/admin/orders/${orderId}`,
+        });
+      }
+    }
   }
 
   revalidatePath("/app/orders");
@@ -144,6 +181,7 @@ export async function sendOfferAction(formData: FormData) {
   if (!order || order.provider_id !== user.id) throw new Error("Not authorized");
   if (!["inquiry", "offered"].includes(order.status)) throw new Error("Invalid order status");
 
+  const fromStatus = order.status;
   const { error } = await supabase
     .from("orders")
     .update({
@@ -154,8 +192,18 @@ export async function sendOfferAction(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  const gigTitle = (order as any).gigs?.title ?? "your inquiry";
+  // Record status history
   const { data: actor } = await supabase.from("profiles").select("name").eq("id", user.id).single();
+  await supabase.from("order_status_history").insert({
+    order_id: orderId,
+    from_status: fromStatus,
+    to_status: "offered",
+    actor_id: user.id,
+    actor_name: actor?.name ?? "",
+    note: `Offer: Rs. ${price.toLocaleString()}`,
+  });
+
+  const gigTitle = (order as any).gigs?.title ?? "your inquiry";
 
   await supabase.from("notifications").insert({
     user_id: order.buyer_id,

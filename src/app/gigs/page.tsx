@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { Search } from "lucide-react";
-import { formatPrice } from "@/lib/format";
+import { GigCard } from "@/components/gig-card";
 
 export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?: string; category?: string; tag?: string }> }) {
   const { q, category, tag } = await props.searchParams;
@@ -14,6 +14,36 @@ export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?
   if (tag) query = query.contains("tags", [tag]);
 
   const { data: gigs } = await query.order("created_at", { ascending: false });
+
+  // Fetch review stats
+  let gigStats: Record<string, { avg: number; count: number }> = {};
+  if (gigs && gigs.length > 0) {
+    const gigIds = gigs.map((g: any) => g.id);
+    const { data: reviews } = await supabase
+      .from("reviews")
+      .select("gig_id, rating")
+      .in("gig_id", gigIds);
+
+    if (reviews) {
+      const grouped: Record<string, number[]> = {};
+      for (const r of reviews as any[]) {
+        if (!grouped[r.gig_id]) grouped[r.gig_id] = [];
+        grouped[r.gig_id].push(r.rating);
+      }
+      for (const [gigId, ratings] of Object.entries(grouped)) {
+        gigStats[gigId] = {
+          avg: ratings.reduce((a, b) => a + b, 0) / ratings.length,
+          count: ratings.length,
+        };
+      }
+    }
+  }
+
+  const enrichedGigs = (gigs ?? []).map((g: any) => ({
+    ...g,
+    avg_rating: gigStats[g.id]?.avg ?? 0,
+    review_count: gigStats[g.id]?.count ?? 0,
+  }));
 
   return (
     <div>
@@ -30,26 +60,8 @@ export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?
           </div>
         ) : (
           <div className="gig-grid" style={{ padding: 0 }}>
-            {gigs.map((gig: any) => (
-              <Link key={gig.id} href={`/gigs/${gig.id}`} className="gig-card" style={{ textDecoration: "none", color: "inherit" }}>
-                <div className="gig-card-image" style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "2rem" }}>
-                  {gig.title.charAt(0)}
-                </div>
-                <div className="gig-card-body">
-                  {gig.featured_until && new Date(gig.featured_until) > new Date() && (
-                    <span className="featured-badge">Featured</span>
-                  )}
-                  <h3 style={{ fontWeight: 600, marginTop: "0.25rem" }}>{gig.title}</h3>
-                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.profiles?.name ?? "Provider"}</p>
-                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-                    {gig.tags?.slice(0, 3).map((t: string) => `#${t}`).join(" ")}
-                  </p>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                    <span style={{ fontWeight: 600 }}>{formatPrice(gig.price)}</span>
-                    <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.location}</span>
-                  </div>
-                </div>
-              </Link>
+            {enrichedGigs.map((gig: any) => (
+              <GigCard key={gig.id} gig={gig} showTags />
             ))}
           </div>
         )}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { OrderChat } from "@/components/orders/order-chat";
+import { StatusTimeline } from "@/components/orders/status-timeline";
 import { OrderActions } from "./order-actions";
 import { ReviewForm } from "./review-form";
 import { DisputeForm } from "./dispute-form";
@@ -27,6 +28,22 @@ export default async function OrderDetailPage(props: { params: Promise<{ orderId
     .eq("order_id", orderId)
     .order("created_at", { ascending: true });
 
+  // Fetch sender profiles for chat
+  const senderIds = [...new Set((messages ?? []).map((m: any) => m.sender_id))];
+  const { data: senderProfiles } = senderIds.length > 0
+    ? await supabase.from("profiles").select("id, name, role").in("id", senderIds)
+    : { data: [] };
+
+  const senders: Record<string, { id: string; name: string; role?: string }> = {};
+  (senderProfiles ?? []).forEach((p: any) => { senders[p.id] = p; });
+
+  // Fetch status history
+  const { data: statusHistory } = await supabase
+    .from("order_status_history")
+    .select("*")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: true });
+
   const isBuyer = order.buyer_id === user!.id;
   const isProvider = order.provider_id === user!.id;
 
@@ -36,7 +53,8 @@ export default async function OrderDetailPage(props: { params: Promise<{ orderId
     .eq("order_id", orderId)
     .maybeSingle();
 
-  const showReviewForm = order.status === "completed" && isBuyer && !existingReview;
+  const reviewableStatuses = ["completed", "dispute_resolved", "dispute_closed"];
+  const showReviewForm = reviewableStatuses.includes(order.status) && isBuyer && !existingReview;
   const showDisputeBtn = ["inquiry", "offered", "accepted", "in_progress", "delivered"].includes(order.status);
 
   return (
@@ -113,7 +131,17 @@ export default async function OrderDetailPage(props: { params: Promise<{ orderId
         </div>
       )}
 
-      <OrderChat orderId={order.id} userId={user!.id} initialMessages={messages ?? []} />
+      <div style={{ marginBottom: "1.5rem" }}>
+        <StatusTimeline entries={statusHistory ?? []} />
+      </div>
+
+      <OrderChat
+        orderId={order.id}
+        userId={user!.id}
+        initialMessages={messages ?? []}
+        senders={senders}
+        currentUserName={isBuyer ? order.buyer?.name : order.provider?.name}
+      />
     </div>
   );
 }
