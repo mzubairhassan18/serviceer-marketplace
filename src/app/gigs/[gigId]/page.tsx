@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
+import { formatPrice } from "@/lib/format";
 
 export default async function GigDetailPage(props: { params: Promise<{ gigId: string }> }) {
   const { gigId } = await props.params;
@@ -30,7 +31,7 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
             {isFeatured && <span className="featured-badge" style={{ marginTop: "0.5rem" }}>Featured</span>}
           </div>
           <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>Rs. {gig.price}</div>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700 }}>{formatPrice(gig.price)}</div>
           </div>
         </div>
 

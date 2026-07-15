@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { Plus } from "lucide-react";
+import { formatPrice } from "@/lib/format";
 
 export default async function MyGigsPage() {
   const supabase = createClient(await cookies());
@@ -44,7 +45,7 @@ export default async function MyGigsPage() {
               <tr key={gig.id}>
                 <td style={{ fontWeight: 500 }}>{gig.title}</td>
                 <td>{gig.category}</td>
-                <td>Rs. {gig.price}</td>
+                <td>{formatPrice(gig.price)}</td>
                 <td><span className={`status-badge ${gig.status}`}>{gig.status}</span></td>
                 <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
                   {new Date(gig.created_at).toLocaleDateString()}

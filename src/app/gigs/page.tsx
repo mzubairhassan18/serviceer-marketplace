@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { Search } from "lucide-react";
+import { formatPrice } from "@/lib/format";
 
 export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?: string; category?: string; tag?: string }> }) {
   const { q, category, tag } = await props.searchParams;
@@ -44,7 +45,7 @@ export default async function BrowseGigsPage(props: { searchParams: Promise<{ q?
                     {gig.tags?.slice(0, 3).map((t: string) => `#${t}`).join(" ")}
                   </p>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                    <span style={{ fontWeight: 600 }}>Rs. {gig.price}</span>
+                    <span style={{ fontWeight: 600 }}>{formatPrice(gig.price)}</span>
                     <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.location}</span>
                   </div>
                 </div>

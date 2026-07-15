@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/utils/supabase/server";
 import { approveGigAction, rejectGigAction } from "./actions";
+import { formatPrice } from "@/lib/format";
 
 export default async function AdminGigsPage() {
   const supabase = createClient(await cookies());
@@ -31,7 +32,7 @@ export default async function AdminGigsPage() {
               <td style={{ fontWeight: 500 }}>{gig.title}</td>
               <td>{gig.profiles?.name ?? "Unknown"}</td>
               <td>{gig.category}</td>
-              <td>Rs. {gig.price}</td>
+              <td>{formatPrice(gig.price)}</td>
               <td><span className={`status-badge ${gig.status}`}>{gig.status}</span></td>
               <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
                 {new Date(gig.created_at).toLocaleDateString()}

@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
+import { formatPrice } from "@/lib/format";
 
 export default async function SearchPage(props: { searchParams: Promise<{ q: string }> }) {
   const { q } = await props.searchParams;
@@ -43,7 +44,7 @@ export default async function SearchPage(props: { searchParams: Promise<{ q: str
               <h3 style={{ fontWeight: 600 }}>{gig.title}</h3>
               <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.profiles?.name}</p>
               <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem" }}>
-                <span style={{ fontWeight: 600 }}>Rs. {gig.price}</span>
+                <span style={{ fontWeight: 600 }}>{formatPrice(gig.price)}</span>
               </div>
             </div>
           </Link>

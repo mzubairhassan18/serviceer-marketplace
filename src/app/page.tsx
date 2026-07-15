@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { Search, Wrench, Zap, PaintBucket, SprayCanIcon as Spray, Brush, Shield, HardHat } from "lucide-react";
+import { cookies } from "next/headers";
+import { createClient } from "@/utils/supabase/server";
+import { Search } from "lucide-react";
+import { formatPrice } from "@/lib/format";
 
 const categories = [
   { name: "Plumbing", icon: "Wrench", color: "#3b82f6" },
@@ -12,14 +15,17 @@ const categories = [
   { name: "More", icon: "Search", color: "#64748b" },
 ];
 
-const featuredGigs = [
-  { id: "1", title: "Expert Plumbing Repair", provider: "Ahmed & Co", price: "1,500", rating: 4.8, featured: true },
-  { id: "2", title: "Full Home Electrical Wiring", provider: "Zeeshan Electric", price: "5,000", rating: 4.9, featured: true },
-  { id: "3", title: "Deep Cleaning Service", provider: "CleanPro", price: "2,000", rating: 4.7, featured: false },
-  { id: "4", title: "Wall Painting & Texture", provider: "PaintMaster", price: "3,500", rating: 4.6, featured: false },
-];
+export default async function HomePage() {
+  const supabase = createClient(await cookies());
 
-export default function HomePage() {
+  const { data: featuredGigs } = await supabase
+    .from("gigs")
+    .select("*, profiles!provider_id(name)")
+    .eq("status", "approved")
+    .order("featured_until", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false })
+    .limit(8);
+
   return (
     <div>
       <section className="marketplace-hero">
@@ -62,24 +68,31 @@ export default function HomePage() {
           <h2 className="section-title">Featured Gigs</h2>
           <Link href="/gigs" style={{ fontSize: "0.875rem", color: "var(--muted-foreground)" }}>View all</Link>
         </div>
-        <div className="gig-grid">
-          {featuredGigs.map((gig) => (
-            <Link key={gig.id} href={`/gigs/${gig.id}`} className="gig-card" style={{ textDecoration: "none", color: "inherit" }}>
-              <div className="gig-card-image" style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)" }}>
-                {gig.title.charAt(0)}
-              </div>
-              <div className="gig-card-body">
-                {gig.featured && <span className="featured-badge">Featured</span>}
-                <h3 style={{ fontWeight: 600, marginTop: "0.25rem" }}>{gig.title}</h3>
-                <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.provider}</p>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
-                  <span style={{ fontWeight: 600 }}>Rs. {gig.price}</span>
-                  <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>&#9733; {gig.rating}</span>
+        {(!featuredGigs || featuredGigs.length === 0) ? (
+          <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
+            <p style={{ color: "var(--muted-foreground)" }}>No gigs available yet.</p>
+          </div>
+        ) : (
+          <div className="gig-grid">
+            {featuredGigs.map((gig: any) => (
+              <Link key={gig.id} href={`/gigs/${gig.id}`} className="gig-card" style={{ textDecoration: "none", color: "inherit" }}>
+                <div className="gig-card-image" style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)" }}>
+                  {gig.title.charAt(0)}
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+                <div className="gig-card-body">
+                  {gig.featured_until && new Date(gig.featured_until) > new Date() && (
+                    <span className="featured-badge">Featured</span>
+                  )}
+                  <h3 style={{ fontWeight: 600, marginTop: "0.25rem" }}>{gig.title}</h3>
+                  <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.profiles?.name ?? "Provider"}</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.5rem" }}>
+                    <span style={{ fontWeight: 600 }}>{formatPrice(gig.price)}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       <section style={{ textAlign: "center", padding: "4rem 2rem", background: "var(--muted)" }}>
