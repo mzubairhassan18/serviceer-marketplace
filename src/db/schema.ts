@@ -24,7 +24,7 @@ const timestamps = {
 /* ── Enums ── */
 export const userRole = pgEnum("user_role", ["buyer", "provider", "admin"]);
 export const gigStatus = pgEnum("gig_status", ["draft", "pending", "approved", "rejected", "archived"]);
-export const orderStatus = pgEnum("order_status", ["inquiry", "accepted", "in_progress", "completed", "cancelled"]);
+export const orderStatus = pgEnum("order_status", ["inquiry", "offered", "accepted", "in_progress", "delivered", "payment_received", "completed", "cancelled", "disputed"]);
 export const subStatus = pgEnum("subscription_status", ["active", "expired", "cancelled"]);
 
 /* ── Profiles ── */
@@ -98,6 +98,7 @@ export const adPackages = pgTable("ad_packages", {
   currency: text("currency").default("PKR").notNull(),
   durationDays: integer("duration_days").notNull(),
   priorityBoost: integer("priority_boost").default(0).notNull(),
+  maxGigs: integer("max_gigs").default(1).notNull(),
   features: jsonb("features").default({}).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   ...timestamps,
@@ -125,7 +126,14 @@ export const orders = pgTable("orders", {
   providerId: uuid("provider_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
   status: orderStatus("status").default("inquiry").notNull(),
   initialMessage: text("initial_message").default("").notNull(),
+  description: text("description").default("").notNull(),
+  offeredPrice: bigint("offered_price", { mode: "number" }),
   contactPhone: text("contact_phone"),
+  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  disputeReason: text("dispute_reason"),
+  disputeRaisedBy: uuid("dispute_raised_by").references(() => profiles.id, { onDelete: "set null" }),
+  disputeCreatedAt: timestamp("dispute_created_at", { withTimezone: true }),
   ...timestamps,
 }, (table) => [
   index("orders_buyer_idx").on(table.buyerId),
@@ -157,6 +165,31 @@ export const reviews = pgTable("reviews", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   check("reviews_rating_check", sql`${table.rating} between 1 and 5`),
+  index("reviews_gig_idx").on(table.gigId),
+]).enableRLS();
+
+/* ── Provider Profiles ── */
+export const providerProfiles = pgTable("provider_profiles", {
+  id: uuid("id").primaryKey().references(() => profiles.id, { onDelete: "cascade" }),
+  bio: text("bio").default("").notNull(),
+  skills: text("skills").array().default(sql`ARRAY[]::text[]`).notNull(),
+  yearsExperience: integer("years_experience").default(0).notNull(),
+  website: text("website").default("").notNull(),
+  ...timestamps,
+}).enableRLS();
+
+/* ── Gig Boosts ── */
+export const gigBoosts = pgTable("gig_boosts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  subscriptionId: uuid("subscription_id").notNull().references(() => providerSubscriptions.id, { onDelete: "cascade" }),
+  gigId: uuid("gig_id").notNull().references(() => gigs.id, { onDelete: "cascade" }),
+  providerId: uuid("provider_id").notNull().references(() => profiles.id, { onDelete: "cascade" }),
+  status: text("status").default("pending").notNull(),
+  ...timestamps,
+}, (table) => [
+  index("gig_boosts_provider_idx").on(table.providerId),
+  index("gig_boosts_gig_idx").on(table.gigId),
+  index("gig_boosts_sub_idx").on(table.subscriptionId),
 ]).enableRLS();
 
 /* ── Audit Events ── */
@@ -182,3 +215,5 @@ export type ProviderSubscription = typeof providerSubscriptions.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type Message = typeof messages.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
+export type ProviderProfile = typeof providerProfiles.$inferSelect;
+export type GigBoost = typeof gigBoosts.$inferSelect;

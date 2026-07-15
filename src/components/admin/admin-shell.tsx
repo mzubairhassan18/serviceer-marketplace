@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Briefcase, Users, ShoppingBag, Package, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, Briefcase, Users, ShoppingBag, Package, Zap, ClipboardList, LogOut } from "lucide-react";
 import { signOutAction } from "@/app/auth/actions";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -14,6 +14,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     { href: "/admin/users", label: "Users", icon: Users },
     { href: "/admin/orders", label: "Orders", icon: ShoppingBag },
     { href: "/admin/packages", label: "Packages", icon: Package },
+    { href: "/admin/boosts", label: "Boosts", icon: Zap },
     { href: "/admin/audit", label: "Audit", icon: ClipboardList },
   ];
 

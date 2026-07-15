@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
+import { formatPrice } from "@/lib/format";
 
 export default async function OrdersPage() {
   const supabase = createClient(await cookies());
@@ -8,9 +9,11 @@ export default async function OrdersPage() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select("*, gigs!gig_id(title)")
+    .select("*, gigs!gig_id(title), buyer:profiles!buyer_id(name), provider:profiles!provider_id(name)")
     .or(`buyer_id.eq.${user!.id},provider_id.eq.${user!.id}`)
     .order("created_at", { ascending: false });
+
+  const isProvider = (o: any) => o.provider_id === user!.id;
 
   return (
     <div>
@@ -25,7 +28,9 @@ export default async function OrdersPage() {
           <thead>
             <tr>
               <th>Gig</th>
+              <th>{isProvider(orders[0]) ? "Buyer" : "Provider"}</th>
               <th>Status</th>
+              <th>Amount</th>
               <th>Date</th>
               <th></th>
             </tr>
@@ -34,7 +39,13 @@ export default async function OrdersPage() {
             {orders.map((o: any) => (
               <tr key={o.id}>
                 <td style={{ fontWeight: 500 }}>{o.gigs?.title ?? "Unknown"}</td>
-                <td><span className={`status-badge`}>{o.status}</span></td>
+                <td style={{ fontSize: "0.875rem" }}>
+                  {isProvider(o) ? (o.buyer?.name ?? "Unknown") : (o.provider?.name ?? "Unknown")}
+                </td>
+                <td><span className={`status-badge ${o.status}`}>{o.status}</span></td>
+                <td style={{ fontSize: "0.875rem" }}>
+                  {o.offered_price ? formatPrice(o.offered_price) : "-"}
+                </td>
                 <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
                   {new Date(o.created_at).toLocaleDateString()}
                 </td>

@@ -11,8 +11,15 @@ export async function sendContactAction(formData: FormData) {
 
   const gigId = formData.get("gigId") as string;
   const providerId = formData.get("providerId") as string;
-  const message = formData.get("message") as string;
+  const description = formData.get("description") as string;
+  const offeredPrice = formData.get("offered_price") as string;
   const phone = formData.get("phone") as string;
+  const message = formData.get("message") as string;
+
+  if (!description?.trim()) throw new Error("Description is required");
+  if (!offeredPrice || Number(offeredPrice) <= 0) throw new Error("Valid budget is required");
+
+  const priceInPaisa = Math.round(Number(offeredPrice) * 100);
 
   const { data: order, error } = await supabase
     .from("orders")
@@ -21,7 +28,9 @@ export async function sendContactAction(formData: FormData) {
       buyer_id: user.id,
       provider_id: providerId,
       status: "inquiry",
-      initial_message: message,
+      description: description.trim(),
+      offered_price: priceInPaisa,
+      initial_message: message?.trim() || null,
       contact_phone: phone || null,
     })
     .select()
@@ -29,11 +38,13 @@ export async function sendContactAction(formData: FormData) {
 
   if (error) throw new Error(error.message);
 
-  await supabase.from("messages").insert({
-    order_id: order.id,
-    sender_id: user.id,
-    body: message,
-  });
+  if (message?.trim()) {
+    await supabase.from("messages").insert({
+      order_id: order.id,
+      sender_id: user.id,
+      body: message.trim(),
+    });
+  }
 
   redirect("/app/orders");
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import { Plus } from "lucide-react";
 import { formatPrice } from "@/lib/format";
+import { GigBoostButton } from "@/components/gig-boost-button";
 
 export default async function MyGigsPage() {
   const supabase = createClient(await cookies());
@@ -13,6 +14,27 @@ export default async function MyGigsPage() {
     .select("*")
     .eq("provider_id", user!.id)
     .order("created_at", { ascending: false });
+
+  const { data: subscriptions } = await supabase
+    .from("provider_subscriptions")
+    .select("id, status, end_date, ad_packages(name, max_gigs)")
+    .eq("provider_id", user!.id)
+    .order("created_at", { ascending: false });
+
+  const activeSubscription = subscriptions?.find(
+    (s: any) => s.status === "active" && new Date(s.end_date) > new Date()
+  ) ?? null;
+
+  const gigIds = gigs?.map((g: any) => g.id) ?? [];
+  let boostMap: Record<string, any> = {};
+  if (gigIds.length > 0) {
+    const { data: boosts } = await supabase
+      .from("gig_boosts")
+      .select("id, gig_id, status, subscription_id")
+      .in("gig_id", gigIds)
+      .in("status", ["pending", "approved"]);
+    boosts?.forEach((b: any) => { boostMap[b.gig_id] = b; });
+  }
 
   return (
     <div>
@@ -36,6 +58,7 @@ export default async function MyGigsPage() {
               <th>Category</th>
               <th>Price</th>
               <th>Status</th>
+              <th>Boost</th>
               <th>Created</th>
               <th>Actions</th>
             </tr>
@@ -47,6 +70,17 @@ export default async function MyGigsPage() {
                 <td>{gig.category}</td>
                 <td>{formatPrice(gig.price)}</td>
                 <td><span className={`status-badge ${gig.status}`}>{gig.status}</span></td>
+                <td>
+                  {gig.status === "approved" ? (
+                    <GigBoostButton
+                      gigId={gig.id}
+                      activeSubscription={activeSubscription}
+                      existingBoost={boostMap[gig.id] ?? null}
+                    />
+                  ) : (
+                    <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>—</span>
+                  )}
+                </td>
                 <td style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
                   {new Date(gig.created_at).toLocaleDateString()}
                 </td>

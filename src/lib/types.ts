@@ -10,6 +10,16 @@ export interface Profile {
   updated_at: string;
 }
 
+export interface ProviderProfile {
+  id: string;
+  bio: string;
+  skills: string[];
+  years_experience: number;
+  website: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Gig {
   id: string;
   provider_id: string;
@@ -38,6 +48,7 @@ export interface AdPackage {
   currency: string;
   duration_days: number;
   priority_boost: number;
+  max_gigs: number;
   features: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
@@ -48,11 +59,23 @@ export interface ProviderSubscription {
   provider_id: string;
   package_id: string;
   package_name?: string;
+  package_max_gigs?: number;
   status: "active" | "expired" | "cancelled";
   start_date: string;
   end_date: string;
   payment_details: string | null;
   created_at: string;
+}
+
+export interface GigBoost {
+  id: string;
+  subscription_id: string;
+  gig_id: string;
+  provider_id: string;
+  status: "pending" | "approved" | "rejected";
+  gig_title?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Order {
@@ -63,9 +86,16 @@ export interface Order {
   buyer_name?: string;
   provider_id: string;
   provider_name?: string;
-  status: "inquiry" | "accepted" | "in_progress" | "completed" | "cancelled";
+  status: "inquiry" | "offered" | "accepted" | "in_progress" | "delivered" | "payment_received" | "completed" | "cancelled" | "disputed";
   initial_message: string;
+  description: string;
+  offered_price: number | null;
   contact_phone: string | null;
+  delivered_at: string | null;
+  completed_at: string | null;
+  dispute_reason: string | null;
+  dispute_raised_by: string | null;
+  dispute_created_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -76,5 +106,16 @@ export interface Message {
   sender_id: string;
   body: string;
   read_at: string | null;
+  created_at: string;
+}
+
+export interface Review {
+  id: string;
+  order_id: string;
+  gig_id: string;
+  reviewer_id: string;
+  reviewer_name?: string;
+  rating: number;
+  body: string;
   created_at: string;
 }
