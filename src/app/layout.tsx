@@ -5,6 +5,9 @@ import { createClient } from "@/utils/supabase/server";
 import { signOutAction } from "@/app/auth/actions";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { HeaderSearch } from "@/components/header-search";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,31 +25,36 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <NavigationProgress />
-        <header className="site-header">
-          <Link href="/" className="site-logo">Serviceer</Link>
-          <nav className="site-nav">
-            <Link href="/gigs">Browse</Link>
-            {user ? (
-              <>
-                <Link href="/app">Dashboard</Link>
-                {isAdmin && <Link href="/admin/dashboard">Admin</Link>}
-                <NotificationBell userId={user.id} />
-                <form action={signOutAction} style={{ display: "inline" }}>
-                  <button type="submit" className="btn-primary-sm" style={{ background: "none", border: "1px solid var(--border)", color: "var(--muted-foreground)", cursor: "pointer" }}>Sign out</button>
-                </form>
-              </>
-            ) : (
-              <>
-                <Link href="/sign-in">Sign in</Link>
-                <Link href="/sign-up" className="btn-primary-sm">Get started</Link>
-              </>
-            )}
-          </nav>
-        </header>
-        <main>{children}</main>
+        <ThemeProvider>
+          <NavigationProgress />
+          <header className="site-header">
+            <div className="header-left">
+              <HeaderSearch />
+            </div>
+            <Link href="/" className="header-center">Serviceer</Link>
+            <div className="header-right">
+              <ThemeToggle />
+              {user ? (
+                <>
+                  <NotificationBell userId={user.id} />
+                  <Link href="/app" className="btn btn-sm">Dashboard</Link>
+                  {isAdmin && <Link href="/admin/dashboard" className="btn btn-sm btn-ghost">Admin</Link>}
+                  <form action={signOutAction} style={{ display: "inline" }}>
+                    <button type="submit" className="btn btn-sm btn-ghost">Sign out</button>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <Link href="/sign-in" className="btn btn-sm btn-ghost">Sign in</Link>
+                  <Link href="/sign-up" className="btn btn-sm btn-primary">Get started</Link>
+                </>
+              )}
+            </div>
+          </header>
+          <main>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

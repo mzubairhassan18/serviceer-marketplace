@@ -38,7 +38,7 @@ export function HeroSearch() {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: "700px", margin: "0 auto" }}>
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
         <div style={{ position: "relative" }}>
           <button
@@ -70,7 +70,8 @@ export function HeroSearch() {
                 left: 0,
                 right: 0,
                 marginTop: "0.25rem",
-                background: "white",
+                background: "var(--card)",
+                border: "1px solid var(--card-border)",
                 borderRadius: "var(--radius)",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                 zIndex: 50,
@@ -86,7 +87,7 @@ export function HeroSearch() {
                   padding: "0.6rem 1rem",
                   textAlign: "left",
                   border: "none",
-                  background: !category ? "var(--muted)" : "white",
+                  background: !category ? "var(--muted)" : "var(--card)",
                   color: "var(--foreground)",
                   cursor: "pointer",
                   fontSize: "0.9rem",
@@ -105,7 +106,7 @@ export function HeroSearch() {
                     padding: "0.6rem 1rem",
                     textAlign: "left",
                     border: "none",
-                    background: category === cat ? "var(--muted)" : "white",
+                    background: category === cat ? "var(--muted)" : "var(--card)",
                     color: "var(--foreground)",
                     cursor: "pointer",
                     fontSize: "0.9rem",
@@ -143,23 +144,23 @@ export function HeroSearch() {
           <Search size={18} /> Search
         </button>
       </div>
-      <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", flexWrap: "wrap" }}>
-        {categories.slice(0, 4).map((cat) => (
+      <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+        {categories.slice(0, 5).map((cat) => (
           <button
             key={cat}
             type="button"
             onClick={() => {
-              setCategory(cat);
               const params = new URLSearchParams({ category: cat.toLowerCase() });
               router.push(`/search?${params.toString()}`);
             }}
             style={{
-              background: "none",
-              border: "none",
-              color: "rgba(255,255,255,0.7)",
-              fontSize: "0.875rem",
+              background: "rgba(255,255,255,0.1)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              color: "rgba(255,255,255,0.85)",
+              fontSize: "0.8rem",
               cursor: "pointer",
-              padding: 0,
+              padding: "0.35rem 0.75rem",
+              borderRadius: "999px",
             }}
           >
             {cat}

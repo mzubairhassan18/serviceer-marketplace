@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { requestBoostAction, cancelBoostAction } from "@/app/app/gigs/boost/actions";
+import { LoadingButton } from "@/components/loading-button";
 
 interface Subscription {
   id: string;
@@ -158,13 +159,13 @@ export function GigBoostButton({
                 >
                   Cancel
                 </button>
-                <button
+                <LoadingButton
                   type="submit"
                   disabled={loading}
                   className="btn btn-primary btn-sm"
                 >
-                  {loading ? "Requesting..." : "Confirm"}
-                </button>
+                  Confirm
+                </LoadingButton>
               </div>
             </form>
           </div>
