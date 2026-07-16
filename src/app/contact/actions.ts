@@ -10,7 +10,6 @@ export async function sendContactAction(formData: FormData) {
   if (!user) redirect("/sign-in");
 
   const gigId = formData.get("gigId") as string;
-  const providerId = formData.get("providerId") as string;
   const description = formData.get("description") as string;
   const offeredPrice = formData.get("offered_price") as string;
   const phone = formData.get("phone") as string;
@@ -18,6 +17,16 @@ export async function sendContactAction(formData: FormData) {
 
   if (!description?.trim()) throw new Error("Description is required");
   if (!offeredPrice || Number(offeredPrice) <= 0) throw new Error("Valid budget is required");
+
+  const { data: gigRecord, error: gigError } = await supabase
+    .from("gigs")
+    .select("title, provider_id")
+    .eq("id", gigId)
+    .eq("status", "approved")
+    .single();
+  if (gigError || !gigRecord) throw new Error("This service is no longer available");
+  const providerId = gigRecord.provider_id;
+  if (providerId === user.id) throw new Error("You cannot inquire about your own service");
 
   const priceInPaisa = Math.round(Number(offeredPrice) * 100);
 
@@ -57,13 +66,12 @@ export async function sendContactAction(formData: FormData) {
   }
 
   // Notify provider
-  const { data: gig } = await supabase.from("gigs").select("title").eq("id", gigId).single();
   const { data: buyer } = await supabase.from("profiles").select("name").eq("id", user.id).single();
 
   await supabase.from("notifications").insert({
     user_id: providerId,
     title: `${buyer?.name ?? "Someone"} placed an order`,
-    body: `${gig?.title ?? "Your gig"} — Rs. ${Number(offeredPrice).toLocaleString()}`,
+    body: `${gigRecord.title ?? "Your service"} — Rs. ${Number(offeredPrice).toLocaleString()}`,
     type: "new_order",
     entity_type: "order",
     entity_id: order.id,
