@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/utils/supabase/server";
 import { generateEmbedding } from "@/lib/embeddings";
+import { trackAiCall } from "@/lib/ai-usage";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
       const queryEmbedding = await generateEmbedding(q);
       const embeddingStr = `[${queryEmbedding.join(",")}]`;
 
-      const { data, error } = await supabase.rpc("search_gigs_by_embedding", {
+      const { data, error } = await supabase.rpc("match_gigs", {
         query_embedding: embeddingStr,
         match_count: 20,
       });
@@ -31,8 +32,8 @@ export async function GET(request: NextRequest) {
           title: r.title,
           description: r.description,
           category: r.category,
-          price: r.price,
-          provider_name: r.provider_name,
+          price: r.price_paisa,
+          provider_id: r.provider_id,
           similarity: r.similarity,
         })) || [],
         mode: "semantic",

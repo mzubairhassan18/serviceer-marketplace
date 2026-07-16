@@ -1,12 +1,16 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/utils/supabase/server";
+import { trackAiCall } from "@/lib/ai-usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MODEL = "gemini-embedding-001";
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
-  const result = await model.embedContent(text);
-  return result.embedding.values;
+  return trackAiCall(MODEL, "embedding", async () => {
+    const model = genAI.getGenerativeModel({ model: MODEL });
+    const result = await model.embedContent(text);
+    return result.embedding.values;
+  }, (values) => ({ input: text.length, output: values.length }));
 }
 
 export async function storeGigEmbedding(gigId: string) {

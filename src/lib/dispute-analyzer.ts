@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@/utils/supabase/server";
+import { trackAiCall } from "@/lib/ai-usage";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MODEL = "gemini-2.5-flash-lite";
 
 export async function analyzeDispute(orderId: string) {
   const supabase = createClient(await (await import("next/headers")).cookies());
@@ -34,28 +36,30 @@ export async function analyzeDispute(orderId: string) {
     ?.map((d: any) => `- "${d.dispute_reason}" → resolved as ${d.status}`)
     .join("\n") || "No past resolved disputes.";
 
-  const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  return trackAiCall(MODEL, "dispute_analysis", async () => {
+    const model = genAI.getGenerativeModel({ model: MODEL });
 
-  const result = await model.generateContent(
-    `You are a dispute resolution assistant for a Pakistani service marketplace.\n\n` +
-    `Analyze this dispute and suggest a fair resolution.\n\n` +
-    `## Order Info\n` +
-    `Service: ${(order as any).gigs?.title ?? "Unknown"}\n` +
-    `Buyer: ${(order as any).profiles?.name ?? "Unknown"}\n` +
-    `Provider: ${(order as any).profiles?.name ?? "Unknown"}\n` +
-    `Dispute reason: ${order.dispute_reason ?? "Not specified"}\n\n` +
-    `## Conversation\n` +
-    `${messagesText}\n\n` +
-    `## Past Resolved Disputes (for reference)\n` +
-    `${pastContext}\n\n` +
-    `## Your Task\n` +
-    `Provide:\n` +
-    `1. **Summary**: Brief summary of the issue\n` +
-    `2. **Fault**: Who is at fault (buyer/provider/both/neither)\n` +
-    `3. **Suggested Resolution**: What should happen\n` +
-    `4. **Confidence**: low/medium/high\n\n` +
-    `Be fair and concise.`
-  );
+    const result = await model.generateContent(
+      `You are a dispute resolution assistant for a Pakistani service marketplace.\n\n` +
+      `Analyze this dispute and suggest a fair resolution.\n\n` +
+      `## Order Info\n` +
+      `Service: ${(order as any).gigs?.title ?? "Unknown"}\n` +
+      `Buyer: ${(order as any).profiles?.name ?? "Unknown"}\n` +
+      `Provider: ${(order as any).profiles?.name ?? "Unknown"}\n` +
+      `Dispute reason: ${order.dispute_reason ?? "Not specified"}\n\n` +
+      `## Conversation\n` +
+      `${messagesText}\n\n` +
+      `## Past Resolved Disputes (for reference)\n` +
+      `${pastContext}\n\n` +
+      `## Your Task\n` +
+      `Provide:\n` +
+      `1. **Summary**: Brief summary of the issue\n` +
+      `2. **Fault**: Who is at fault (buyer/provider/both/neither)\n` +
+      `3. **Suggested Resolution**: What should happen\n` +
+      `4. **Confidence**: low/medium/high\n\n` +
+      `Be fair and concise.`
+    );
 
-  return result.response.text();
+    return result.response.text();
+  }, (text) => ({ input: text.length, output: 0 }));
 }
