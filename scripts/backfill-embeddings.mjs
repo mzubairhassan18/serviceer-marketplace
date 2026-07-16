@@ -1,13 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const GEMINI_KEY = process.env.GEMINI_API_KEY!;
-const EMBEDDING_URL = "https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent";
+const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const EMBEDDING_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent";
 
-async function generateEmbedding(text: string): Promise<number[]> {
+async function generateEmbedding(text) {
   const res = await fetch(`${EMBEDDING_URL}?key=${GEMINI_KEY}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -53,10 +53,10 @@ async function backfill() {
 
       if (upsertErr) throw upsertErr;
       success++;
-      console.log(`  ✓ ${gig.title}`);
-    } catch (err: any) {
+      console.log(`  OK ${gig.title}`);
+    } catch (err) {
       failed++;
-      console.error(`  ✗ ${gig.title}: ${err.message}`);
+      console.error(`  FAIL ${gig.title}: ${err.message}`);
     }
   }
 

@@ -4,7 +4,7 @@ import { createClient } from "@/utils/supabase/server";
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+  const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" });
   const result = await model.embedContent(text);
   return result.embedding.values;
 }
@@ -34,7 +34,7 @@ export async function findSimilarGigs(queryEmbedding: number[], limit = 10) {
 
   const embeddingStr = `[${queryEmbedding.join(",")}]`;
 
-  const { data, error } = await supabase.rpc("search_gigs_by_embedding", {
+  const { data, error } = await supabase.rpc("match_gigs", {
     query_embedding: embeddingStr,
     match_count: limit,
   });
