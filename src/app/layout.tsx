@@ -8,6 +8,7 @@ import { NotificationBell } from "@/components/notification-bell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileSiteNav } from "@/components/mobile-site-nav";
+import { ExploreServicesLink } from "@/components/explore-services-link";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="header-left">
               <Link href="/" className="site-logo"><span className="site-logo-mark">S</span><span>Serviceer</span></Link>
               <nav className="site-nav" aria-label="Main navigation">
-                <Link href="/#services">Explore services</Link>
+                <ExploreServicesLink>Explore services</ExploreServicesLink>
                 <Link href="/sign-up">Become a provider</Link>
               </nav>
             </div>

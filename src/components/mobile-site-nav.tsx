@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { ExploreServicesLink } from "@/components/explore-services-link";
 
 export function MobileSiteNav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
@@ -12,7 +13,7 @@ export function MobileSiteNav({ signedIn }: { signedIn: boolean }) {
         {open ? <X size={21} /> : <Menu size={21} />}
       </button>
       {open && <div className="mobile-nav-panel">
-        <Link href="/#services" onClick={() => setOpen(false)}>Explore services</Link>
+        <ExploreServicesLink onExplore={() => setOpen(false)}>Explore services</ExploreServicesLink>
         <Link href="/sign-up" onClick={() => setOpen(false)}>Become a provider</Link>
         <Link href={signedIn ? "/app/dashboard" : "/sign-in"} onClick={() => setOpen(false)}>{signedIn ? "Open dashboard" : "Sign in"}</Link>
       </div>}

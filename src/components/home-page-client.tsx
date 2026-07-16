@@ -9,29 +9,40 @@ import { GigCard } from "@/components/gig-card";
 import { HeroSearch } from "@/components/hero-search";
 import { MarketplaceTrust } from "@/components/marketplace-trust";
 import { ViewToggle } from "@/components/view-toggle";
+import { ExploreServicesLink } from "@/components/explore-services-link";
+import { rankGigsByIntent } from "@/lib/search-intent";
 
 interface GigWithStats { id: string; title: string; description: string; category: string; price: number; location: string; tags: string[]; featured_until: string | null; profiles: { name: string } | null; avg_rating: number; review_count: number; }
 
 export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
   const [view, setView] = useState<"grid" | "list">("grid");
+  const [showAll, setShowAll] = useState(false);
   const params = useSearchParams();
   const q = params.get("q") ?? "";
   const category = params.get("category") ?? "";
   const filtering = Boolean(q.trim() || category);
-  const gigs = useMemo(() => allGigs.filter((gig) => {
-    const categoryMatch = !category || gig.category?.toLowerCase() === category.toLowerCase();
-    const needle = q.trim().toLowerCase();
-    const queryMatch = !needle || [gig.title, gig.description, gig.category, ...(gig.tags ?? [])].some((value) => value?.toLowerCase().includes(needle));
-    return categoryMatch && queryMatch;
-  }), [allGigs, category, q]);
+  const searchResult = useMemo(() => rankGigsByIntent(allGigs, q, category), [allGigs, category, q]);
+  const gigs = searchResult.gigs;
   const featured = allGigs.filter((gig) => gig.featured_until && new Date(gig.featured_until) > new Date()).slice(0, 4);
-  const visible = filtering ? gigs : (featured.length ? featured : allGigs.slice(0, 8));
+  const visible = filtering ? gigs : showAll ? allGigs : (featured.length ? featured : allGigs.slice(0, 8));
 
   useEffect(() => {
     if ((filtering || window.location.hash === "#services") && document.getElementById("services")) {
       window.requestAnimationFrame(() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" }));
     }
   }, [filtering, q, category]);
+
+  useEffect(() => {
+    const browseAll = () => setShowAll(true);
+    window.addEventListener("serviceer:browse-all", browseAll);
+    return () => window.removeEventListener("serviceer:browse-all", browseAll);
+  }, []);
+
+  function browseAll() {
+    setShowAll(true);
+    window.history.replaceState(null, "", "/#services");
+    window.requestAnimationFrame(() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
 
   return (
     <div className="marketplace-home">
@@ -57,16 +68,16 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
         {!filtering && <CategoryBrowser />}
         <section className="services-section" id="services">
           <div className="section-heading-row services-heading">
-            <div><span className="eyebrow">{filtering ? "Search results" : "Handpicked nearby"}</span><h2>{filtering ? (q || category) : "Reliable help, ready when you are."}</h2><p>{filtering ? `${gigs.length} matching ${gigs.length === 1 ? "service" : "services"}` : "Standout professionals worth knowing about."}</p></div>
-            <div className="services-actions">{filtering && <Link href="/">Clear search</Link>}<ViewToggle onChange={setView} /></div>
+            <div><span className="eyebrow">{filtering ? "Search results" : showAll ? "All local services" : "Handpicked nearby"}</span><h2>{filtering ? (q || category) : showAll ? `Explore all ${allGigs.length} services.` : "Reliable help, ready when you are."}</h2><p>{filtering ? `${gigs.length} matching ${gigs.length === 1 ? "service" : "services"}` : "Standout professionals worth knowing about."}</p>{q && searchResult.inferredCategory && <div className="intent-notice"><Sparkles size={14} /> We understood this as <strong>{searchResult.inferredCategory}</strong></div>}</div>
+            <div className="services-actions">{filtering && <ExploreServicesLink>Clear search</ExploreServicesLink>}<ViewToggle onChange={setView} /></div>
           </div>
-          {visible.length > 0 ? <div className={view === "grid" ? "services-grid" : "services-list"}>{visible.map((gig) => <GigCard key={gig.id} gig={gig} view={view} showTags={filtering} />)}</div> : <div className="marketplace-empty"><span>Nothing here yet</span><h3>Try a broader search.</h3><p>Change the service or browse everything available nearby.</p><Link href="/">Explore all services <ArrowRight size={16} /></Link></div>}
-          {!filtering && allGigs.length > visible.length && <div className="browse-more"><Link href="/#services">Browse all {allGigs.length} services <ArrowRight size={17} /></Link></div>}
+          {visible.length > 0 ? <div className={view === "grid" ? "services-grid" : "services-list"}>{visible.map((gig) => <GigCard key={gig.id} gig={gig} view={view} showTags={filtering} />)}</div> : <div className="marketplace-empty"><span>Nothing here yet</span><h3>Try a broader search.</h3><p>Change the wording or browse everything available nearby.</p><ExploreServicesLink>Explore all services <ArrowRight size={16} /></ExploreServicesLink></div>}
+          {!filtering && !showAll && allGigs.length > visible.length && <div className="browse-more"><button type="button" onClick={browseAll}>Browse all {allGigs.length} services <ArrowRight size={17} /></button></div>}
         </section>
         <MarketplaceTrust />
         <section className="provider-cta"><div><span className="eyebrow">For professionals</span><h2>Skill deserves a bigger stage.</h2><p>Create your service profile, meet serious customers, and grow your reputation one great job at a time.</p></div><Link href="/sign-up">Start offering services <ArrowRight size={18} /></Link></section>
       </main>
-      <footer className="marketplace-footer"><Link href="/" className="footer-brand"><span>S</span> Serviceer</Link><p>Good people. Great work. Right nearby.</p><div><Link href="/#services">Explore</Link><Link href="/sign-up">Become a provider</Link><Link href="/sign-in">Sign in</Link></div><small>© {new Date().getFullYear()} Serviceer</small></footer>
+      <footer className="marketplace-footer"><Link href="/" className="footer-brand"><span>S</span> Serviceer</Link><p>Good people. Great work. Right nearby.</p><div><ExploreServicesLink>Explore</ExploreServicesLink><Link href="/sign-up">Become a provider</Link><Link href="/sign-in">Sign in</Link></div><small>© {new Date().getFullYear()} Serviceer</small></footer>
     </div>
   );
 }
