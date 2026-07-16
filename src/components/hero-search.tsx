@@ -15,7 +15,10 @@ export function HeroSearch() {
   function search(nextQuery = query) {
     const params = new URLSearchParams();
     if (nextQuery.trim()) params.set("q", nextQuery.trim());
-    router.push(`/${params.size ? `?${params}` : ""}#services`, { scroll: true });
+    router.push(`/${params.size ? `?${params}` : ""}#services`, { scroll: false });
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    });
   }
 
   return (

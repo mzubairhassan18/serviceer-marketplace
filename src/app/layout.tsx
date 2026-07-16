@@ -7,7 +7,7 @@ import { NavigationProgress } from "@/components/navigation-progress";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Menu } from "lucide-react";
+import { MobileSiteNav } from "@/components/mobile-site-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <div className="header-left">
               <Link href="/" className="site-logo"><span className="site-logo-mark">S</span><span>Serviceer</span></Link>
               <nav className="site-nav" aria-label="Main navigation">
-                <Link href="/gigs">Explore services</Link>
+                <Link href="/#services">Explore services</Link>
                 <Link href="/sign-up">Become a provider</Link>
               </nav>
             </div>
@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <Link href="/sign-up" className="btn btn-sm btn-primary header-join">Join Serviceer</Link>
                 </>
               )}
-              <button className="mobile-menu" type="button" aria-label="Open menu"><Menu size={21} /></button>
+              <MobileSiteNav signedIn={Boolean(user)} />
             </div>
           </header>
           <main>{children}</main>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, BadgeCheck, MapPin, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { CategoryBrowser } from "@/components/category-browser";
@@ -26,6 +26,12 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
   }), [allGigs, category, q]);
   const featured = allGigs.filter((gig) => gig.featured_until && new Date(gig.featured_until) > new Date()).slice(0, 4);
   const visible = filtering ? gigs : (featured.length ? featured : allGigs.slice(0, 8));
+
+  useEffect(() => {
+    if ((filtering || window.location.hash === "#services") && document.getElementById("services")) {
+      window.requestAnimationFrame(() => document.getElementById("services")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
+  }, [filtering, q, category]);
 
   return (
     <div className="marketplace-home">
@@ -55,12 +61,12 @@ export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
             <div className="services-actions">{filtering && <Link href="/">Clear search</Link>}<ViewToggle onChange={setView} /></div>
           </div>
           {visible.length > 0 ? <div className={view === "grid" ? "services-grid" : "services-list"}>{visible.map((gig) => <GigCard key={gig.id} gig={gig} view={view} showTags={filtering} />)}</div> : <div className="marketplace-empty"><span>Nothing here yet</span><h3>Try a broader search.</h3><p>Change the service or browse everything available nearby.</p><Link href="/">Explore all services <ArrowRight size={16} /></Link></div>}
-          {!filtering && allGigs.length > visible.length && <div className="browse-more"><Link href="/gigs">Browse all {allGigs.length} services <ArrowRight size={17} /></Link></div>}
+          {!filtering && allGigs.length > visible.length && <div className="browse-more"><Link href="/#services">Browse all {allGigs.length} services <ArrowRight size={17} /></Link></div>}
         </section>
         <MarketplaceTrust />
         <section className="provider-cta"><div><span className="eyebrow">For professionals</span><h2>Skill deserves a bigger stage.</h2><p>Create your service profile, meet serious customers, and grow your reputation one great job at a time.</p></div><Link href="/sign-up">Start offering services <ArrowRight size={18} /></Link></section>
       </main>
-      <footer className="marketplace-footer"><Link href="/" className="footer-brand"><span>S</span> Serviceer</Link><p>Good people. Great work. Right nearby.</p><div><Link href="/gigs">Explore</Link><Link href="/sign-up">Become a provider</Link><Link href="/sign-in">Sign in</Link></div><small>© {new Date().getFullYear()} Serviceer</small></footer>
+      <footer className="marketplace-footer"><Link href="/" className="footer-brand"><span>S</span> Serviceer</Link><p>Good people. Great work. Right nearby.</p><div><Link href="/#services">Explore</Link><Link href="/sign-up">Become a provider</Link><Link href="/sign-in">Sign in</Link></div><small>© {new Date().getFullYear()} Serviceer</small></footer>
     </div>
   );
 }
