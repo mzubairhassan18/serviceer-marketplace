@@ -6,6 +6,7 @@ import { createClient } from "@/utils/supabase/server";
 import { formatPrice } from "@/lib/format";
 import { InquiryForm } from "@/components/inquiry-form";
 import { GigReviews } from "@/components/gig-reviews";
+import { firstRelation } from "@/lib/supabase-relations";
 
 export default async function GigDetailPage(props: { params: Promise<{ gigId: string }> }) {
   const { gigId } = await props.params;
@@ -18,7 +19,8 @@ export default async function GigDetailPage(props: { params: Promise<{ gigId: st
   const average = reviewList.length ? reviewList.reduce((sum: number, review: any) => sum + review.rating, 0) / reviewList.length : 0;
   const featured = gig.featured_until && new Date(gig.featured_until) > new Date();
   const ownGig = user?.id === gig.provider_id;
-  const providerName = gig.profiles?.name ?? "Serviceer professional";
+  const provider = firstRelation(gig.profiles);
+  const providerName = provider?.name ?? "Serviceer professional";
   const initials = providerName.split(" ").map((part: string) => part[0]).slice(0, 2).join("");
 
   return <div className="gig-detail-page">
