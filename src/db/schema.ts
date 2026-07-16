@@ -221,6 +221,16 @@ export const orderStatusHistory = pgTable("order_status_history", {
   index("order_status_history_order_idx").on(table.orderId),
 ]).enableRLS();
 
+/* ── Gig Embeddings (for AI semantic search) ── */
+export const gigEmbeddings = pgTable("gig_embeddings", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  gigId: uuid("gig_id").notNull().references(() => gigs.id, { onDelete: "cascade" }).unique(),
+  embedding: text("embedding").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("gig_embeddings_gig_idx").on(table.gigId),
+]).enableRLS();
+
 /* -- Types -- */
 export type Profile = typeof profiles.$inferSelect;
 export type Gig = typeof gigs.$inferSelect;
@@ -232,3 +242,4 @@ export type Review = typeof reviews.$inferSelect;
 export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type GigBoost = typeof gigBoosts.$inferSelect;
 export type OrderStatusHistory = typeof orderStatusHistory.$inferSelect;
+export type GigEmbedding = typeof gigEmbeddings.$inferSelect;

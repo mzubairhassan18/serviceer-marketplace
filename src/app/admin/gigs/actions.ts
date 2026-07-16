@@ -29,9 +29,21 @@ export async function approveGigAction(formData: FormData) {
     });
 
     await logAuditEvent("gig_approved", "gig", gigId, `Approved gig: ${gig.title}`);
+
+    // Auto-generate embedding for semantic search (non-blocking)
+    storeGigEmbeddingSafe(gigId);
   }
 
   revalidatePath("/admin/gigs");
+}
+
+async function storeGigEmbeddingSafe(gigId: string) {
+  try {
+    const { storeGigEmbedding } = await import("@/lib/embeddings");
+    await storeGigEmbedding(gigId);
+  } catch {
+    // Embeddings may not be set up yet — silently ignore
+  }
 }
 
 export async function rejectGigAction(formData: FormData) {
