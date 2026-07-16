@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { ArrowUpRight, BadgeCheck, Heart, MapPin, Sparkles, Star } from "lucide-react";
 import { formatPrice } from "@/lib/format";
 
 interface GigCardProps {
@@ -8,73 +8,44 @@ interface GigCardProps {
   view?: "grid" | "list";
 }
 
-export function GigCard({ gig, showTags = false, view = "grid" }: GigCardProps) {
-  const isFeatured = gig.featured_until && new Date(gig.featured_until) > new Date();
-  const avgRating = gig.avg_rating ?? 0;
-  const reviewCount = gig.review_count ?? 0;
+const categoryClass: Record<string, string> = {
+  plumbing: "visual-blue", electrical: "visual-yellow", painting: "visual-coral",
+  cleaning: "visual-mint", carpentry: "visual-sand", security: "visual-violet",
+  construction: "visual-orange",
+};
 
-  if (view === "list") {
-    return (
-      <Link href={`/gigs/${gig.id}`} className={`gig-list-item${isFeatured ? " featured" : ""}`}>
-        <div className="gig-list-thumb">
-          {gig.title.charAt(0)}
-        </div>
-        <div className="gig-list-info">
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-              {isFeatured && <span className="featured-badge">Featured</span>}
-              <h3 className="gig-card-title" style={{ WebkitLineClamp: "unset" }}>{gig.title}</h3>
-            </div>
-            <p className="gig-card-provider">{gig.profiles?.name ?? "Provider"}</p>
-            {showTags && gig.tags && gig.tags.length > 0 && (
-              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
-                {gig.tags.slice(0, 3).map((t: string) => `#${t}`).join(" ")}
-              </p>
-            )}
-          </div>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "0.5rem" }}>
-            <span className="gig-card-price" style={{ marginTop: 0 }}>{formatPrice(gig.price)}</span>
-            {avgRating > 0 && (
-              <div className="gig-card-rating">
-                <Star size={12} fill="#f59e0b" stroke="#f59e0b" />
-                {avgRating.toFixed(1)}
-                <span>({reviewCount})</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </Link>
-    );
-  }
+export function GigCard({ gig, showTags = false, view = "grid" }: GigCardProps) {
+  const featured = gig.featured_until && new Date(gig.featured_until) > new Date();
+  const rating = gig.avg_rating ?? 0;
+  const visual = categoryClass[gig.category?.toLowerCase()] ?? "visual-blue";
+  const initials = (gig.profiles?.name ?? "Serviceer").split(" ").map((part: string) => part[0]).slice(0, 2).join("");
 
   return (
-    <Link href={`/gigs/${gig.id}`} className={`gig-card${isFeatured ? " featured" : ""}`} style={{ textDecoration: "none", color: "inherit" }}>
-      <div className="gig-card-image" style={{ display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "2rem" }}>
-        {gig.title.charAt(0)}
-      </div>
-      <div className="gig-card-body">
-        {isFeatured && <span className="featured-badge">Featured</span>}
-        <h3 className="gig-card-title">{gig.title}</h3>
-        <p className="gig-card-provider">{gig.profiles?.name ?? "Provider"}</p>
-        {showTags && gig.tags && gig.tags.length > 0 && (
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-            {gig.tags.slice(0, 3).map((t: string) => `#${t}`).join(" ")}
-          </p>
-        )}
-        {avgRating > 0 && (
-          <div className="gig-card-rating">
-            <Star size={12} fill="#f59e0b" stroke="#f59e0b" />
-            {avgRating.toFixed(1)}
-            <span>({reviewCount})</span>
-          </div>
-        )}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.75rem" }}>
-          <span className="gig-card-price" style={{ marginTop: 0 }}>{formatPrice(gig.price)}</span>
-          {gig.location && (
-            <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{gig.location}</span>
-          )}
+    <article className={`service-card ${view === "list" ? "service-card-list" : ""} ${featured ? "is-featured" : ""}`}>
+      <Link href={`/gigs/${gig.id}`} className={`service-visual ${visual}`} aria-label={gig.title}>
+        <span className="service-category">{gig.category || "Local service"}</span>
+        <span className="service-visual-mark">{gig.title.charAt(0)}</span>
+        {featured && <span className="service-featured"><Sparkles size={13} /> Top pick</span>}
+        <span className="service-open"><ArrowUpRight size={18} /></span>
+      </Link>
+      <button className="service-save" type="button" aria-label="Save service"><Heart size={18} /></button>
+      <div className="service-content">
+        <div className="provider-line">
+          <span className="provider-avatar">{initials}</span>
+          <span>{gig.profiles?.name ?? "Verified professional"}</span>
+          <BadgeCheck size={15} className="verified-icon" aria-label="Verified" />
+        </div>
+        <Link href={`/gigs/${gig.id}`} className="service-title">{gig.title}</Link>
+        {showTags && gig.tags?.length > 0 && <p className="service-tags">{gig.tags.slice(0, 3).join(" · ")}</p>}
+        <div className="service-meta">
+          <span className="service-rating"><Star size={14} fill="currentColor" />{rating > 0 ? rating.toFixed(1) : "New"}{rating > 0 && <small>({gig.review_count})</small>}</span>
+          {gig.location && <span className="service-location"><MapPin size={13} />{gig.location}</span>}
+        </div>
+        <div className="service-footer">
+          <span>Starting from</span>
+          <strong>{formatPrice(gig.price)}</strong>
         </div>
       </div>
-    </Link>
+    </article>
   );
 }

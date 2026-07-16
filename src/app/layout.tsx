@@ -7,7 +7,7 @@ import { NavigationProgress } from "@/components/navigation-progress";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { HeaderSearch } from "@/components/header-search";
+import { Menu } from "lucide-react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,9 +31,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <NavigationProgress />
           <header className="site-header">
             <div className="header-left">
-              <HeaderSearch />
+              <Link href="/" className="site-logo"><span className="site-logo-mark">S</span><span>Serviceer</span></Link>
+              <nav className="site-nav" aria-label="Main navigation">
+                <Link href="/gigs">Explore services</Link>
+                <Link href="/sign-up">Become a provider</Link>
+              </nav>
             </div>
-            <Link href="/" className="header-center">Serviceer</Link>
             <div className="header-right">
               <ThemeToggle />
               {user ? (
@@ -47,10 +50,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 </>
               ) : (
                 <>
-                  <Link href="/sign-in" className="btn btn-sm btn-ghost">Sign in</Link>
-                  <Link href="/sign-up" className="btn btn-sm btn-primary">Get started</Link>
+                  <Link href="/sign-in" className="btn btn-sm btn-ghost header-sign-in">Sign in</Link>
+                  <Link href="/sign-up" className="btn btn-sm btn-primary header-join">Join Serviceer</Link>
                 </>
               )}
+              <button className="mobile-menu" type="button" aria-label="Open menu"><Menu size={21} /></button>
             </div>
           </header>
           <main>{children}</main>

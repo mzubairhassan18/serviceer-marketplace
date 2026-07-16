@@ -1,244 +1,66 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { HeroSearch } from "@/components/hero-search";
+import { ArrowRight, BadgeCheck, MapPin, ShieldCheck, Sparkles, Star } from "lucide-react";
+import { CategoryBrowser } from "@/components/category-browser";
 import { GigCard } from "@/components/gig-card";
+import { HeroSearch } from "@/components/hero-search";
+import { MarketplaceTrust } from "@/components/marketplace-trust";
 import { ViewToggle } from "@/components/view-toggle";
 
-interface GigWithStats {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  price: number;
-  location: string;
-  tags: string[];
-  featured_until: string | null;
-  profiles: { name: string } | null;
-  avg_rating: number;
-  review_count: number;
-}
+interface GigWithStats { id: string; title: string; description: string; category: string; price: number; location: string; tags: string[]; featured_until: string | null; profiles: { name: string } | null; avg_rating: number; review_count: number; }
 
 export function HomePageClient({ allGigs }: { allGigs: GigWithStats[] }) {
   const [view, setView] = useState<"grid" | "list">("grid");
-  const searchParams = useSearchParams();
-  const q = searchParams.get("q") || "";
-  const category = searchParams.get("category") || "";
-
-  const isFiltering = q.trim() || category;
-
-  const filteredGigs = useMemo(() => {
-    let result = allGigs;
-
-    if (category) {
-      result = result.filter((g) => g.category?.toLowerCase() === category.toLowerCase());
-    }
-
-    if (q.trim()) {
-      const query = q.trim().toLowerCase();
-      result = result.filter((g) =>
-        g.title.toLowerCase().includes(query) ||
-        g.description.toLowerCase().includes(query) ||
-        g.category?.toLowerCase().includes(query) ||
-        g.tags?.some((t) => t.toLowerCase().includes(query))
-      );
-    }
-
-    return result;
-  }, [allGigs, q, category]);
-
-  const isFeatured = (g: GigWithStats) => g.featured_until && new Date(g.featured_until) > new Date();
-
-  const featuredFiltered = filteredGigs.filter(isFeatured);
-  const otherFiltered = filteredGigs.filter((g) => !isFeatured(g));
-
-  const allFeatured = allGigs.filter(isFeatured);
-  const allOther = allGigs.filter((g) => !isFeatured(g));
-
-  const categoryGroups = useMemo(() => {
-    const groups: Record<string, GigWithStats[]> = {};
-    for (const gig of allOther) {
-      const cat = gig.category || "Other";
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(gig);
-    }
-    return groups;
-  }, [allOther]);
-
-  const displayFeatured = isFiltering ? featuredFiltered : allFeatured;
+  const params = useSearchParams();
+  const q = params.get("q") ?? "";
+  const category = params.get("category") ?? "";
+  const filtering = Boolean(q.trim() || category);
+  const gigs = useMemo(() => allGigs.filter((gig) => {
+    const categoryMatch = !category || gig.category?.toLowerCase() === category.toLowerCase();
+    const needle = q.trim().toLowerCase();
+    const queryMatch = !needle || [gig.title, gig.description, gig.category, ...(gig.tags ?? [])].some((value) => value?.toLowerCase().includes(needle));
+    return categoryMatch && queryMatch;
+  }), [allGigs, category, q]);
+  const featured = allGigs.filter((gig) => gig.featured_until && new Date(gig.featured_until) > new Date()).slice(0, 4);
+  const visible = filtering ? gigs : (featured.length ? featured : allGigs.slice(0, 8));
 
   return (
-    <div>
+    <div className="marketplace-home">
       <section className="marketplace-hero">
-        <h1 style={{ fontSize: "2.5rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-          What service do you need?
-        </h1>
-        <p style={{ fontSize: "1.1rem", opacity: 0.8, marginBottom: "1.5rem" }}>
-          Find trusted professionals for any job
-        </p>
-        <HeroSearch />
-      </section>
-
-      <div className="container" style={{ paddingTop: "1.5rem" }}>
-        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "1.25rem" }}>
-          <ViewToggle onChange={setView} />
+        <div className="hero-orb hero-orb-one" /><div className="hero-orb hero-orb-two" />
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <div className="hero-kicker"><span><Sparkles size={14} /></span> Local talent. Properly found.</div>
+            <h1>Your to-do list<br />just met its <em>match.</em></h1>
+            <p>From a quick repair to a big idea, discover skilled people nearby who are ready to make it happen.</p>
+            <HeroSearch />
+            <div className="hero-proof"><span><BadgeCheck size={17} /> Trusted profiles</span><span><Star size={17} /> Real reviews</span><span><ShieldCheck size={17} /> Support when needed</span></div>
+          </div>
+          <div className="hero-story" aria-hidden="true">
+            <div className="story-card story-main"><div className="story-image"><span className="story-tool">S</span><div className="story-status"><i /> Available today</div></div><div className="story-person"><span>AH</span><div><strong>Ahmed H.</strong><small><BadgeCheck size={13} /> Home electrician</small></div><b>4.9 <Star size={12} fill="currentColor" /></b></div></div>
+            <div className="story-float story-location"><MapPin size={16} /><div><small>Nearby</small><strong>2.4 km away</strong></div></div>
+            <div className="story-float story-review"><span>“</span><div><strong>Job done beautifully.</strong><small>— Sana, Lahore</small></div></div>
+          </div>
         </div>
-
-        {/* Search results header */}
-        {isFiltering && (
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-              <h2 style={{ fontSize: "1.1rem", fontWeight: 600 }}>
-                {category && `"${category.charAt(0).toUpperCase() + category.slice(1)}"`}
-                {category && q && " — "}
-                {q && `"${q}"`}
-              </h2>
-              <Link href="/" style={{ fontSize: "0.8rem", color: "var(--accent)", textDecoration: "none" }}>
-                Clear filters
-              </Link>
-            </div>
-            <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-              {filteredGigs.length} {filteredGigs.length === 1 ? "service" : "services"} found
-            </p>
-          </div>
-        )}
-
-        {/* Relevant results when filtering */}
-        {isFiltering && displayFeatured.length > 0 && (
-          <section style={{ marginBottom: "2rem" }}>
-            <div style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">Featured Results</h2>
-            </div>
-            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-              {displayFeatured.map((gig) => (
-                <GigCard key={gig.id} gig={gig} view={view} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {isFiltering && otherFiltered.length > 0 && (
-          <section style={{ marginBottom: "2rem" }}>
-            <div style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">Other Results</h2>
-            </div>
-            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-              {otherFiltered.map((gig) => (
-                <GigCard key={gig.id} gig={gig} view={view} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Always show: All gigs section */}
-        {displayFeatured.length > 0 && !isFiltering && (
-          <section style={{ marginBottom: "2rem" }}>
-            <div style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">Featured</h2>
-            </div>
-            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-              {displayFeatured.map((gig) => (
-                <GigCard key={gig.id} gig={gig} view={view} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* All gigs - show when not filtering (featured + non-featured) */}
-        {!isFiltering && allOther.length > 0 && (
-          <section style={{ marginBottom: "2rem" }}>
-            <div style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">All Services</h2>
-            </div>
-            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-              {allOther.map((gig) => (
-                <GigCard key={gig.id} gig={gig} view={view} />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* When filtering, also show all gigs + category groups below results */}
-        {isFiltering && allOther.length > 0 && (
-          <>
-            <section style={{ marginBottom: "2rem" }}>
-              <div style={{ padding: 0, marginBottom: "1rem" }}>
-                <h2 className="section-title">All Services</h2>
-              </div>
-              <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-                {allOther.map((gig) => (
-                  <GigCard key={gig.id} gig={gig} view={view} />
-                ))}
-              </div>
-            </section>
-
-            {Object.entries(categoryGroups).map(([cat, gigs]) => (
-              <section key={cat} style={{ marginBottom: "2rem" }}>
-                <div style={{ padding: 0, marginBottom: "1rem" }}>
-                  <h2 className="section-title">{cat}</h2>
-                </div>
-                <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-                  {gigs.slice(0, 4).map((gig) => (
-                    <GigCard key={gig.id} gig={gig} view={view} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </>
-        )}
-
-        {/* Category groups when not filtering */}
-        {!isFiltering && Object.entries(categoryGroups).map(([cat, gigs]) => (
-          <section key={cat} style={{ marginBottom: "2rem" }}>
-            <div style={{ padding: 0, marginBottom: "1rem" }}>
-              <h2 className="section-title">{cat}</h2>
-              {gigs.length > 4 && (
-                <Link
-                  href={`/?category=${cat.toLowerCase()}`}
-                  style={{ fontSize: "0.8rem", color: "var(--accent)", textDecoration: "none" }}
-                >
-                  View all
-                </Link>
-              )}
-            </div>
-            <div className={view === "grid" ? "gig-grid" : "gig-list"}>
-              {gigs.slice(0, 4).map((gig) => (
-                <GigCard key={gig.id} gig={gig} view={view} />
-              ))}
-            </div>
-          </section>
-        ))}
-
-        {/* Empty states */}
-        {isFiltering && filteredGigs.length === 0 && (
-          <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
-            <p style={{ color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              No services found for this search.
-            </p>
-            <Link href="/" className="btn btn-primary" style={{ textDecoration: "none" }}>
-              Browse all services
-            </Link>
-          </div>
-        )}
-
-        {!isFiltering && allGigs.length === 0 && (
-          <div className="card" style={{ textAlign: "center", padding: "3rem" }}>
-            <p style={{ color: "var(--muted-foreground)" }}>No gigs available yet.</p>
-          </div>
-        )}
-      </div>
-
-      <section style={{ textAlign: "center", padding: "4rem 2rem", background: "var(--muted)", marginTop: "2rem" }}>
-        <h2 style={{ fontSize: "1.5rem", fontWeight: 600, marginBottom: "0.5rem" }}>Are you a service provider?</h2>
-        <p style={{ color: "var(--muted-foreground)", marginBottom: "1.5rem" }}>
-          List your services, get featured, and start receiving orders today.
-        </p>
-        <Link href="/sign-up" className="btn btn-primary" style={{ textDecoration: "none" }}>
-          Become a Provider
-        </Link>
       </section>
+
+      <main className="marketplace-container">
+        {!filtering && <CategoryBrowser />}
+        <section className="services-section" id="services">
+          <div className="section-heading-row services-heading">
+            <div><span className="eyebrow">{filtering ? "Search results" : "Handpicked nearby"}</span><h2>{filtering ? (q || category) : "Reliable help, ready when you are."}</h2><p>{filtering ? `${gigs.length} matching ${gigs.length === 1 ? "service" : "services"}` : "Standout professionals worth knowing about."}</p></div>
+            <div className="services-actions">{filtering && <Link href="/">Clear search</Link>}<ViewToggle onChange={setView} /></div>
+          </div>
+          {visible.length > 0 ? <div className={view === "grid" ? "services-grid" : "services-list"}>{visible.map((gig) => <GigCard key={gig.id} gig={gig} view={view} showTags={filtering} />)}</div> : <div className="marketplace-empty"><span>Nothing here yet</span><h3>Try a broader search.</h3><p>Change the service or browse everything available nearby.</p><Link href="/">Explore all services <ArrowRight size={16} /></Link></div>}
+          {!filtering && allGigs.length > visible.length && <div className="browse-more"><Link href="/gigs">Browse all {allGigs.length} services <ArrowRight size={17} /></Link></div>}
+        </section>
+        <MarketplaceTrust />
+        <section className="provider-cta"><div><span className="eyebrow">For professionals</span><h2>Skill deserves a bigger stage.</h2><p>Create your service profile, meet serious customers, and grow your reputation one great job at a time.</p></div><Link href="/sign-up">Start offering services <ArrowRight size={18} /></Link></section>
+      </main>
+      <footer className="marketplace-footer"><Link href="/" className="footer-brand"><span>S</span> Serviceer</Link><p>Good people. Great work. Right nearby.</p><div><Link href="/gigs">Explore</Link><Link href="/sign-up">Become a provider</Link><Link href="/sign-in">Sign in</Link></div><small>© {new Date().getFullYear()} Serviceer</small></footer>
     </div>
   );
 }
